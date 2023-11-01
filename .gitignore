@@ -1,24 +1,24 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+/app/node_modules
+/app/.pnp
 .pnp.js
 
 # testing
-/coverage
+/app/coverage
 
 # database
-/prisma/db.sqlite
-/prisma/db.sqlite-journal
+/app/prisma/db.sqlite
+/app/prisma/db.sqlite-journal
 
 # next.js
-/.next/
-/out/
+/app/.next/
+/app/out/
 next-env.d.ts
 
 # production
-/build
+/app/build
 
 # misc
 .DS_Store

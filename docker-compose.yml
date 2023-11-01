@@ -1,0 +1,57 @@
+version: "3.9"
+services:
+  # app:
+  #   platform: "linux/amd64"
+  #   build:
+  #     context: ./app
+  #     dockerfile: Dockerfile
+  #     args:
+  #       NEXT_PUBLIC_CLIENTVAR: ${NEXT_PUBLIC_CLIENTVAR}
+  #   working_dir: /app
+  #   ports:
+  #     - "3000:3000"
+  #   image: t3-app
+  #   environment:
+  #     DATABASE_URL: postgresql://${DB_USER}:${DB_PASS}@postgres:5432/${DB_NAME}
+
+  app-local:
+    platform: "linux/amd64"
+    build:
+      context: ./app
+      dockerfile: Dockerfile.local
+      args:
+        NEXT_PUBLIC_CLIENTVAR: ${NEXT_PUBLIC_CLIENTVAR}
+    working_dir: /app
+    ports:
+      - "3000:3000"
+      - "5555:5555"
+    image: t3-app
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASS}@postgres:5432/${DB_NAME}
+    user: "1000:1000"
+    volumes:
+      - ./app:/app
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PG_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PG_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
