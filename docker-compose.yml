@@ -1,36 +1,20 @@
 version: "3.9"
 services:
-  # app:
-  #   platform: "linux/amd64"
-  #   build:
-  #     context: ./app
-  #     dockerfile: Dockerfile
-  #     args:
-  #       NEXT_PUBLIC_CLIENTVAR: ${NEXT_PUBLIC_CLIENTVAR}
-  #   working_dir: /app
-  #   ports:
-  #     - "3000:3000"
-  #   image: t3-app
-  #   environment:
-  #     DATABASE_URL: postgresql://${DB_USER}:${DB_PASS}@postgres:5432/${DB_NAME}
-
-  app-local:
-    platform: "linux/amd64"
+  app:
     build:
       context: ./app
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_CLIENTVAR: ${NEXT_PUBLIC_CLIENTVAR}
-    working_dir: /app
     ports:
       - "3000:3000"
-      - "5555:5555"
-    image: t3-app
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASS}@postgres:5432/${DB_NAME}
-    user: "1000:1000"
-    volumes:
-      - ./app:/app
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      DOCKER_NAME: app
 
   postgres:
     image: postgres
