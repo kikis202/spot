@@ -17,8 +17,16 @@ model User {
     role          Role      @default(USER)
     createdAt     DateTime  @default(now())
     updatedAt     DateTime  @updatedAt
-    accounts      Account[]
-    sessions      Session[]
+
+    accounts Account[]
+    sessions Session[]
+
+    addresses      Address[]
+    trackedParcels TrackedParcels[]
+    sentParcels    Parcel[]         @relation("ParcelSender")
+    courierParcels Parcel[]         @relation("ParcelCourier")
+
+    @@index([role])
 }
 
 enum Role {
@@ -27,6 +35,128 @@ enum Role {
     BUISNESS
     COURIER
     USER
+}
+
+// Parcels
+
+model Address {
+    id         String @id @default(cuid())
+    street     String
+    city       String
+    postalCode String
+    country    String
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    parcelOrigins      Parcel[]       @relation("ParcelOrigin")
+    parcelDestinations Parcel[]       @relation("ParcelDestination")
+    parcelMachine      ParcelMachine?
+
+    @@index([userId])
+}
+
+model ParcelUpdate {
+    id        String       @id @default(cuid())
+    parcelId  String
+    status    ParcelStatus
+    notes     String?      @db.Text
+    createdAt DateTime     @default(now())
+
+    parcel Parcel @relation(fields: [parcelId], references: [id])
+
+    @@index([parcelId])
+}
+
+model Parcel {
+    id             String       @id @default(cuid())
+    trackingNumber String       @unique
+    status         ParcelStatus @default(PENDING)
+    weight         Float
+    size           ParcelSize
+    notes          String?      @db.Text
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+
+    senderId String
+    sender   User   @relation("ParcelSender", fields: [senderId], references: [id])
+
+    courierId String?
+    courier   User?   @relation("ParcelCourier", fields: [courierId], references: [id])
+
+    originAddressId String
+    origin          Address @relation("ParcelOrigin", fields: [originAddressId], references: [id])
+
+    destinationId String?
+    destination   Address? @relation("ParcelDestination", fields: [destinationId], references: [id])
+
+    locker   Locker? @relation(fields: [lockerId], references: [id])
+    lockerId String? @unique
+
+    updates       ParcelUpdate[]
+    usersTracking TrackedParcels[]
+
+    @@index([senderId, courierId])
+}
+
+enum ParcelStatus {
+    PENDING
+    IN_TRANSIT
+    OUT_FOR_DELIVERY
+    FAILED_ATTEMPT
+    AWAITING_PICKUP
+    DELIVERED
+    CANCELLED
+    RETURNED
+}
+
+enum ParcelSize {
+    SMALL
+    MEDIUM
+    LARGE
+    XLARGE
+    CUSTOM
+}
+
+model ParcelMachine {
+    id        String  @id @default(cuid())
+    addressId String  @unique
+    available Boolean @default(true)
+
+    lockers Locker[]
+    address Address  @relation(fields: [addressId], references: [id])
+}
+
+model Locker {
+    id              String     @id @default(cuid())
+    size            LockerSize
+    parcelMachineId String
+    available       Boolean    @default(true)
+
+    parcel        Parcel?
+    parcelMachine ParcelMachine @relation(fields: [parcelMachineId], references: [id])
+
+    @@index([parcelMachineId])
+}
+
+enum LockerSize {
+    SMALL
+    MEDIUM
+    LARGE
+    XLARGE
+    CUSTOM
+}
+
+model TrackedParcels {
+    userId    String
+    parcelId  String
+    createdAt DateTime @default(now())
+
+    user   User   @relation(fields: [userId], references: [id])
+    parcel Parcel @relation(fields: [parcelId], references: [id])
+
+    @@id([userId, parcelId])
+    @@index([userId])
 }
 
 // NextAuth
