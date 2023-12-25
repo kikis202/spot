@@ -1,13 +1,13 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import {
-  getServerSession,
-  type DefaultSession,
-  type NextAuthOptions,
-} from "next-auth";
+import { getServerSession } from "next-auth";
+
 import GoogleProvider from "next-auth/providers/google";
 
 import { env } from "~/env.mjs";
 import { db } from "~/server/db";
+
+import type { Role } from "@prisma/client";
+import type { DefaultSession, NextAuthOptions } from "next-auth";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -19,13 +19,13 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      role: "ADMIN" | "SUPPORT" | "BUISNESS" | "COURIER" | "USER";
+      role: Role;
       // ...other properties
     } & DefaultSession["user"];
   }
 
   interface User {
-    role: "ADMIN" | "SUPPORT" | "BUISNESS" | "COURIER" | "USER";
+    role: Role;
     // ...other properties
   }
 }
