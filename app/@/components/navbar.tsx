@@ -109,9 +109,9 @@ const ListItem = React.forwardRef<
 ListItem.displayName = "ListItem";
 
 const navLinkMap = (item: NavItem) => (
-  <NavigationMenuItem>
+  <NavigationMenuItem key={item.name}>
     {item.childs ? (
-      <React.Fragment key={item.name}>
+      <>
         <NavigationMenuTrigger>{item.name}</NavigationMenuTrigger>
         <NavigationMenuContent>
           <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
@@ -122,9 +122,9 @@ const navLinkMap = (item: NavItem) => (
             ))}
           </ul>
         </NavigationMenuContent>
-      </React.Fragment>
+      </>
     ) : (
-      <Link href={item.href} key={item.name} legacyBehavior passHref>
+      <Link href={item.href} legacyBehavior passHref>
         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
           {item.name}
         </NavigationMenuLink>

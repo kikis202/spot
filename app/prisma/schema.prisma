@@ -1,6 +1,6 @@
 generator client {
     provider      = "prisma-client-js"
-    binaryTargets = "linux-musl-openssl-3.0.x"
+    binaryTargets = ["linux-musl-openssl-3.0.x", "windows"]
 }
 
 datasource db {
@@ -40,11 +40,12 @@ enum Role {
 // Parcels
 
 model Address {
-    id         String @id @default(cuid())
+    id         String   @id @default(cuid())
     street     String
     city       String
     postalCode String
     country    String
+    createdAt  DateTime @default(now())
 
     userId String?
     user   User?   @relation(fields: [userId], references: [id])
@@ -84,8 +85,8 @@ model Parcel {
     courierId String?
     courier   User?   @relation("ParcelCourier", fields: [courierId], references: [id])
 
-    originAddressId String
-    origin          Address @relation("ParcelOrigin", fields: [originAddressId], references: [id])
+    originId String
+    origin   Address @relation("ParcelOrigin", fields: [originId], references: [id])
 
     destinationId String?
     destination   Address? @relation("ParcelDestination", fields: [destinationId], references: [id])
@@ -119,9 +120,9 @@ enum ParcelSize {
 }
 
 model ParcelMachine {
-    id        String  @id @default(cuid())
-    addressId String  @unique
-    available Boolean @default(true)
+    id        String   @id @default(cuid())
+    addressId String   @unique
+    createdAt DateTime @default(now())
 
     lockers Locker[]
     address Address  @relation(fields: [addressId], references: [id])
@@ -132,6 +133,8 @@ model Locker {
     size            LockerSize
     parcelMachineId String
     available       Boolean    @default(true)
+    createdAt       DateTime   @default(now())
+    updatedAt       DateTime   @updatedAt
 
     parcel        Parcel?
     parcelMachine ParcelMachine @relation(fields: [parcelMachineId], references: [id])
