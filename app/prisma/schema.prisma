@@ -91,8 +91,8 @@ model Parcel {
     destinationId String?
     destination   Address? @relation("ParcelDestination", fields: [destinationId], references: [id])
 
-    locker   Locker? @relation(fields: [lockerId], references: [id])
     lockerId String? @unique
+    locker   Locker? @relation(fields: [lockerId], references: [id])
 
     updates       ParcelUpdate[]
     usersTracking TrackedParcels[]
