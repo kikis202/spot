@@ -132,7 +132,11 @@ export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 
 /** Reusable middleware that enforces user is ADMIN before running the procedure. */
 const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.session || !ctx.session.user || ctx.session.user.role !== Role.ADMIN) {
+  if (
+    !ctx.session ||
+    !ctx.session.user ||
+    ctx.session.user.role !== Role.ADMIN
+  ) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
@@ -152,3 +156,29 @@ const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
  * @see https://trpc.io/docs/procedures
  */
 export const adminProcedure = t.procedure.use(enforceUserIsAdmin);
+
+const enforceUserIsCourier = t.middleware(({ ctx, next }) => {
+  if (
+    !ctx.session ||
+    !ctx.session.user ||
+    ctx.session.user.role !== Role.COURIER
+  ) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({
+    ctx: {
+      // infers the `session` as non-nullable
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+
+/**
+ * Courier procedure
+ *
+ * If you want a query or mutation to ONLY be accessible to COURIER users, use this. It verifies
+ * the session is valid and guarantees `ctx.session.user` is not null and validates that user role is COURIER.
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+export const courierProcedure = t.procedure.use(enforceUserIsCourier);
