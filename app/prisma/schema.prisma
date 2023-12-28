@@ -121,6 +121,7 @@ enum ParcelSize {
 
 model ParcelMachine {
     id        String   @id @default(cuid())
+    name      String   @unique
     addressId String   @unique
     createdAt DateTime @default(now())
 
