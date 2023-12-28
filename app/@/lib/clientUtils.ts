@@ -1,13 +1,28 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 
 function useStorage<T>(
   key: string,
   defaultValue: T | (() => T),
-  storageObject: Storage,
+  storageType: "local" | "session",
 ): [T, (newValue: T) => void, () => void] {
+  const storageObject = useMemo(() => {
+    const isClient = typeof window === "object";
+
+    if (storageType === "local") {
+      return isClient ? window.localStorage : null;
+    } else {
+      return isClient ? window.sessionStorage : null;
+    }
+  }, [storageType]);
+
   const [value, setValue] = useState<T>(() => {
+    if (!storageObject)
+      return typeof defaultValue === "function"
+        ? (defaultValue as () => T)()
+        : defaultValue;
+
     const jsonValue = storageObject.getItem(key);
     if (jsonValue != null) return JSON.parse(jsonValue) as T;
 
@@ -19,10 +34,12 @@ function useStorage<T>(
   });
 
   useEffect(() => {
-    if (value === undefined) {
-      storageObject.removeItem(key);
-    } else {
-      storageObject.setItem(key, JSON.stringify(value));
+    if (storageObject) {
+      if (value === undefined) {
+        storageObject.removeItem(key);
+      } else {
+        storageObject.setItem(key, JSON.stringify(value));
+      }
     }
   }, [key, value, storageObject]);
 
@@ -34,9 +51,9 @@ function useStorage<T>(
 }
 
 export function useLocalStorage<T>(key: string, defaultValue: T | (() => T)) {
-  return useStorage<T>(key, defaultValue, window.localStorage);
+  return useStorage<T>(key, defaultValue, "local");
 }
 
 export function useSessionStorage<T>(key: string, defaultValue: T | (() => T)) {
-  return useStorage<T>(key, defaultValue, window.sessionStorage);
+  return useStorage<T>(key, defaultValue, "session");
 }
