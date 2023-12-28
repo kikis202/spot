@@ -9,7 +9,7 @@ export const MainLayout = async ({ children }: PropsWithChildren) => {
 
   return (
     <main>
-      <div className="flex min-h-screen flex-col max-w-screen-2xl mx-auto">
+      <div className="mx-auto flex min-h-screen max-w-screen-2xl flex-col px-4">
         <Navbar role={role} />
         {children}
       </div>
