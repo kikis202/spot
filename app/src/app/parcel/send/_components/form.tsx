@@ -3,6 +3,7 @@
 import Stepper from "./stepper";
 import { Button } from "@/components/ui/button";
 import { useSessionStorage } from "@/lib/clientUtils";
+import DeliveryType from "./deliveryTypeForm";
 
 const StepDeliveryIcon = () => (
   <svg
@@ -29,6 +30,7 @@ const StepDeliveryIcon = () => (
     ></polygon>
   </svg>
 );
+
 const StepPersonalInfoIcon = () => (
   <svg
     className="h-4 w-4"
@@ -88,13 +90,6 @@ const steps = [
   },
 ];
 
-const DeliveryType = ({ nextStep }: { nextStep: () => void }) => {
-  return (
-    <div>
-      <Button onClick={nextStep}>Next</Button>
-    </div>
-  );
-};
 const PersonalInfo = ({ nextStep }: { nextStep: () => void }) => {
   return (
     <div>
