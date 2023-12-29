@@ -59,6 +59,8 @@ export function useSessionStorage<T>(key: string, defaultValue: T | (() => T)) {
 }
 
 export function setSessionStorageValue<T>(key: string, value: T) {
+  if (typeof window !== "object") return;
+
   if (value === undefined) {
     window.sessionStorage.removeItem(key);
   } else {
@@ -68,6 +70,8 @@ export function setSessionStorageValue<T>(key: string, value: T) {
 }
 
 export function getSessionStorageValue<T>(key: string, defaultValue: T) {
+  if (typeof window !== "object") return defaultValue;
+
   const value = window.sessionStorage.getItem(key);
   if (!value) return defaultValue;
   return JSON.parse(value) as T;
