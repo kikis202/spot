@@ -73,11 +73,13 @@ model Parcel {
     id             String       @id @default(cuid())
     trackingNumber String       @unique
     status         ParcelStatus @default(PENDING)
-    weight         Float
     size           ParcelSize
     notes          String?      @db.Text
     createdAt      DateTime     @default(now())
     updatedAt      DateTime     @updatedAt
+    // only for custom size
+    weight         Float?
+    dimensions     String? // exaple: 20x30x20
 
     senderId String
     sender   User   @relation("ParcelSender", fields: [senderId], references: [id])
@@ -97,7 +99,9 @@ model Parcel {
     updates       ParcelUpdate[]
     usersTracking TrackedParcels[]
 
-    @@index([senderId, courierId])
+    @@index([trackingNumber])
+    @@index([senderId])
+    @@index([courierId])
 }
 
 enum ParcelStatus {
