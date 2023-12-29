@@ -76,6 +76,18 @@ const deliverySchema = z
     },
   );
 
+const deliverySchemaParsed = z.object({
+  weight: z.number().min(1).max(100).optional(),
+  width: z.number().min(1).max(100).optional(),
+  height: z.number().min(1).max(100).optional(),
+  length: z.number().min(1).max(100).optional(),
+  size: z.nativeEnum(ParcelSize),
+  notes: z.string().optional(),
+  origin: z.enum(sendingOptions),
+  destination: z.enum(sendingOptions),
+  dimensions: z.string().optional(),
+});
+
 const CustomParcelFields = ({
   form,
 }: {
@@ -189,7 +201,20 @@ const DeliveryType = ({ nextStep }: { nextStep: () => void }) => {
   useEffect(() => {
     if (Object.keys(data).length === 0) return;
     try {
-      form.reset(deliverySchema.parse(data));
+      let parsedData = deliverySchemaParsed.parse(data);
+      if (parsedData.size === ParcelSize.CUSTOM && parsedData.dimensions) {
+        const [width, height, length] = parsedData.dimensions.split("x");
+        if (!width || !height || !length) throw new Error("Invalid dimensions");
+
+        parsedData = {
+          ...parsedData,
+          width: parseFloat(width),
+          height: parseFloat(height),
+          length: parseFloat(length),
+        };
+      }
+
+      form.reset(deliverySchema.parse(parsedData));
     } catch (e) {
       console.log(e);
     }
@@ -198,6 +223,16 @@ const DeliveryType = ({ nextStep }: { nextStep: () => void }) => {
   const selectedSize = form.watch("size");
 
   const onSubmit = (data: z.infer<typeof deliverySchema>) => {
+    if (data.size === ParcelSize.CUSTOM) {
+      data.dimensions = `${data.width}x${data.height}x${data.length}`;
+    } else {
+      delete data.weight;
+      delete data.dimensions;
+    }
+    delete data.width;
+    delete data.height;
+    delete data.length;
+
     setSessionStorageValue("deliveryType", data);
     nextStep();
   };
