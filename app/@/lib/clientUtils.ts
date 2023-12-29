@@ -57,3 +57,18 @@ export function useLocalStorage<T>(key: string, defaultValue: T | (() => T)) {
 export function useSessionStorage<T>(key: string, defaultValue: T | (() => T)) {
   return useStorage<T>(key, defaultValue, "session");
 }
+
+export function setSessionStorageValue<T>(key: string, value: T) {
+  if (value === undefined) {
+    window.sessionStorage.removeItem(key);
+  } else {
+    console.log("setting", key, value);
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  }
+}
+
+export function getSessionStorageValue<T>(key: string, defaultValue: T) {
+  const value = window.sessionStorage.getItem(key);
+  if (!value) return defaultValue;
+  return JSON.parse(value) as T;
+}
