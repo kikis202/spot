@@ -2,8 +2,9 @@
 
 import Stepper from "./stepper";
 import { Button } from "@/components/ui/button";
-import { useSessionStorage } from "@/lib/clientUtils";
+import { useCallback, useEffect, useState } from "react";
 import DeliveryType from "./deliveryTypeForm";
+import { getSessionStorageValue } from "@/lib/clientUtils";
 
 const StepDeliveryIcon = () => (
   <svg
@@ -113,25 +114,51 @@ const Payment = ({ nextStep }: { nextStep: () => void }) => {
 };
 
 const SendForm = () => {
-  const [step, setStep] = useSessionStorage("step", 1);
+  const [step, setStep] = useState(1);
+  const [resetKey, setResetKey] = useState(0);
+
+  const reset = useCallback(() => {
+    window.sessionStorage.clear();
+
+    setStep(1);
+    setResetKey((prevKey) => prevKey + 1);
+  }, []);
+
+  useEffect(() => {
+    const deliveryType = getSessionStorageValue("deliveryType", {});
+    const personalInfo = getSessionStorageValue("personalInfo", {});
+    const orderSummary = getSessionStorageValue("orderSummary", {});
+    const payment = getSessionStorageValue("payment", {});
+
+    if (Object.keys(payment).length > 0) setStep(5);
+    else if (Object.keys(orderSummary).length > 0) setStep(4);
+    else if (Object.keys(personalInfo).length > 0) setStep(3);
+    else if (Object.keys(deliveryType).length > 0) setStep(2);
+  }, []);
 
   return (
-    <div className="flex gap-4 px-4 py-6">
+    <div className="flex gap-8 px-4 py-6">
       <Stepper steps={steps} current={step} />
       <div className="relative w-full">
-        {step === 1 && <DeliveryType nextStep={() => setStep(2)} />}
+        {step === 1 && (
+          <DeliveryType key={resetKey} nextStep={() => setStep(2)} />
+        )}
         {step === 2 && <PersonalInfo nextStep={() => setStep(3)} />}
         {step === 3 && <OrderSummary nextStep={() => setStep(4)} />}
         {step === 4 && <Payment nextStep={() => setStep(5)} />}
-        <Button
-          className="absolute right-0 top-0"
-          variant={"ghost"}
-          onClick={() => {
-            setStep(1);
-          }}
-        >
-          Reset
-        </Button>
+        <div className="absolute right-0 top-0 space-x-4">
+          {step !== 1 && (
+            <Button
+              variant={"ghost"}
+              onClick={() => setStep((current) => current - 1)}
+            >
+              Back
+            </Button>
+          )}
+          <Button variant={"ghost"} onClick={reset}>
+            Reset
+          </Button>
+        </div>
       </div>
     </div>
   );
