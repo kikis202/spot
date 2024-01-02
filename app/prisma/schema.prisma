@@ -63,8 +63,7 @@ model Address {
 model ContactInfo {
     id          String   @id @default(cuid())
     contactName String? // example: "Home", "Work", "Mom"
-    firstName   String
-    lastName    String
+    fullName    String?
     phone       String
     email       String
     createdAt   DateTime @default(now())
