@@ -36,6 +36,14 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command";
+import { Switch } from "@/components/ui/switch";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const addressSchema = z
   .object({
@@ -44,25 +52,25 @@ const addressSchema = z
     city: z.string().min(1, "City is required"),
     postalCode: z.string().min(1, "Postal code is required"),
     country: z.string().min(1, "Country is required"),
-    save: z.boolean(),
+    save: z.boolean().default(false),
     addressName: z.string().optional(),
   })
   .refine(({ save, addressName }) => !save || !!addressName, {
-    message: "Address name is required",
+    message: "Address name is required for saving address",
     path: ["addressName"],
   });
 
 const contactSchema = z
   .object({
     id: z.string().optional(),
-    name: z.string().min(1, "Name is required"),
+    name: z.string().optional(),
     phone: z.string().min(1, "Phone number is required"),
     email: z.string().email("Invalid email address"),
-    save: z.boolean(),
+    save: z.boolean().default(false),
     contactName: z.string().optional(),
   })
   .refine(({ save, contactName }) => !save || !!contactName, {
-    message: "Contact name is required",
+    message: "Contact name is required for saving contact",
     path: ["contactName"],
   });
 
@@ -91,85 +99,103 @@ const AddressForm = ({
   form: ReturnType<typeof useForm<PersonalInfoFormValues>>;
   type: "sender" | "receiver";
 }) => {
+  const saveAddress = form.watch(`${type}.address.save`);
+
   return (
     <>
-      <FormField
-        control={form.control}
-        name={`${type}.address.street`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Street</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                type="text"
-                placeholder="Groove Street 123-45"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name={`${type}.address.city`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>City</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                type="text"
-                placeholder="Los Santos"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name={`${type}.address.postalCode`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Postal code</FormLabel>
-            <FormControl>
-              <Input {...field} type="text" placeholder="12345" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name={`${type}.address.country`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Country</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                type="text"
-                placeholder="United States of America"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name={`${type}.address.addressName`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Save address as</FormLabel>
-            <FormControl>
-              <Input {...field} type="text" placeholder="Home address" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="space-y-2">
+        <FormField
+          control={form.control}
+          name={`${type}.address.street`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Street</FormLabel>
+              <FormControl>
+                <Input {...field} type="text" placeholder="Enter street" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <div className="space-y-2">
+        <FormField
+          control={form.control}
+          name={`${type}.address.city`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>City</FormLabel>
+              <FormControl>
+                <Input {...field} type="text" placeholder="Enter city" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <div className="space-y-2">
+        <FormField
+          control={form.control}
+          name={`${type}.address.postalCode`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Postal code</FormLabel>
+              <FormControl>
+                <Input {...field} type="text" placeholder="Enter postal code" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <div className="space-y-2">
+        <FormField
+          control={form.control}
+          name={`${type}.address.country`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Country</FormLabel>
+              <FormControl>
+                <Input {...field} type="text" placeholder="Enter country" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <div className="flex flex-row items-center gap-2">
+        <FormField
+          control={form.control}
+          name={`${type}.address.save`}
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center gap-2 space-y-0">
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormLabel>Save Address</FormLabel>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <div className={cn("space-y-2", !saveAddress && "hidden")}>
+        <FormField
+          control={form.control}
+          name={`${type}.address.addressName`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Save address as</FormLabel>
+              <FormControl>
+                <Input {...field} type="text" placeholder="Enter name" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </>
   );
 };
@@ -210,7 +236,7 @@ const SelectParcelMachine = ({
                   variant="outline"
                   role="combobox"
                   className={cn(
-                    "w-[200px] justify-between",
+                    "justify-between",
                     !field.value && "text-muted-foreground",
                   )}
                 >
@@ -223,7 +249,7 @@ const SelectParcelMachine = ({
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
+            <PopoverContent align="end" className="p-0">
               <Command>
                 <CommandInput
                   placeholder="Search framework..."
@@ -287,7 +313,128 @@ const ContactForm = ({
   form: ReturnType<typeof useForm<PersonalInfoFormValues>>;
   type: "sender" | "receiver";
 }) => {
-  return null;
+  const saveContact = form.watch(`${type}.contact.save`);
+
+  return (
+    <Card className="w-full max-w-lg">
+      <CardHeader>
+        <CardTitle>Contact Details</CardTitle>
+        <CardDescription>Enter contact details.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name={`${type}.contact.name`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input {...field} type="text" placeholder="Enter name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name={`${type}.contact.phone`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="tel"
+                    placeholder="Enter phone number"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name={`${type}.contact.email`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input {...field} type="email" placeholder="Enter email" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex flex-row items-center gap-2">
+          <FormField
+            control={form.control}
+            name={`${type}.contact.save`}
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel>Save Contact</FormLabel>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className={cn("space-y-2", !saveContact && "hidden")}>
+          <FormField
+            control={form.control}
+            name={`${type}.contact.contactName`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Save contact as</FormLabel>
+                <FormControl>
+                  <Input {...field} type="text" placeholder="Enter name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const DeliveryForm = ({
+  form,
+  type,
+  method,
+}: {
+  form: ReturnType<typeof useForm<PersonalInfoFormValues>>;
+  type: "sender" | "receiver";
+  method: "courier" | "parcelMachine";
+}) => {
+  return (
+    <Card className="w-full max-w-lg">
+      <CardHeader>
+        <CardTitle>{`${
+          method === "courier" ? "Address" : "Parcel machine"
+        } Details`}</CardTitle>
+        <CardDescription>Enter details.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* address */}
+        {method === "parcelMachine" && (
+          <SelectParcelMachine form={form} type={type} />
+        )}
+        {method === "courier" && <AddressForm form={form} type={type} />}
+      </CardContent>
+    </Card>
+  );
 };
 
 const PersonalInfo = ({ nextStep, resetSteps }: PersonalInfoProps) => {
@@ -332,35 +479,33 @@ const PersonalInfo = ({ nextStep, resetSteps }: PersonalInfoProps) => {
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, (val) => {console.log(val)})}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <H2>Sender</H2>
-          <div className="my-6">
+          <div className="my-6 flex space-x-6">
             {/* contact */}
             <ContactForm form={form} type="sender" />
             {/* address */}
-            {deliveryType.origin === "parcelMachine" && (
-              <SelectParcelMachine form={form} type="sender" />
-            )}
-            {deliveryType.origin === "courier" && (
-              <AddressForm form={form} type="sender" />
-            )}
+            <DeliveryForm
+              form={form}
+              type="sender"
+              method={deliveryType.origin}
+            />
           </div>
 
           <H2>Reciever</H2>
-          <div className="my-6">
+          <div className="my-6 flex space-x-6">
             {/* contact */}
             <ContactForm form={form} type="receiver" />
             {/* address */}
-            {deliveryType.destination === "parcelMachine" && (
-              <SelectParcelMachine form={form} type="receiver" />
-            )}
-            {deliveryType.destination === "courier" && (
-              <AddressForm form={form} type="receiver" />
-            )}
+            <DeliveryForm
+              form={form}
+              type="receiver"
+              method={deliveryType.destination}
+            />
           </div>
 
           <Button className="mt-6" type="submit">
-            Submit
+            Next
           </Button>
         </form>
       </Form>
