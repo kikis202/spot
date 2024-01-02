@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
 import DeliveryType from "./_deliveryType/deliveryTypeForm";
 import { getSessionStorageValue } from "@/lib/clientUtils";
+import PersonalInfo from "./_personalInfo/personalInfoForm";
 
 const StepDeliveryIcon = () => (
   <svg
@@ -91,13 +92,6 @@ const steps = [
   },
 ];
 
-const PersonalInfo = ({ nextStep }: { nextStep: () => void }) => {
-  return (
-    <div>
-      <Button onClick={nextStep}>Next</Button>
-    </div>
-  );
-};
 const OrderSummary = ({ nextStep }: { nextStep: () => void }) => {
   return (
     <div>

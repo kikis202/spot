@@ -1,5 +1,6 @@
 import { createTRPCRouter } from "~/server/api/trpc";
 import { parcelsRouter } from "./routers/parcels";
+import { parcelMachinesRouter } from "./routers/parcelMachines";
 import { addressesRouter } from "./routers/addresses";
 
 /**
@@ -9,6 +10,7 @@ import { addressesRouter } from "./routers/addresses";
  */
 export const appRouter = createTRPCRouter({
   parcels: parcelsRouter,
+  parcelMachines: parcelMachinesRouter,
   addresses: addressesRouter,
 });
 

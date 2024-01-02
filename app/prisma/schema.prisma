@@ -26,6 +26,8 @@ model User {
     sentParcels    Parcel[]         @relation("ParcelSender")
     courierParcels Parcel[]         @relation("ParcelCourier")
 
+    contactInfo ContactInfo[]
+
     @@index([role])
 }
 
@@ -40,12 +42,13 @@ enum Role {
 // Parcels
 
 model Address {
-    id         String   @id @default(cuid())
-    street     String
-    city       String
-    postalCode String
-    country    String
-    createdAt  DateTime @default(now())
+    id          String   @id @default(cuid())
+    addressName String? // example: "Home", "Work", "Mom"
+    street      String
+    city        String
+    postalCode  String
+    country     String
+    createdAt   DateTime @default(now())
 
     userId String?
     user   User?   @relation(fields: [userId], references: [id])
@@ -53,6 +56,21 @@ model Address {
     parcelOrigins      Parcel[]       @relation("ParcelOrigin")
     parcelDestinations Parcel[]       @relation("ParcelDestination")
     parcelMachine      ParcelMachine?
+
+    @@index([userId])
+}
+
+model ContactInfo {
+    id          String   @id @default(cuid())
+    contactName String? // example: "Home", "Work", "Mom"
+    firstName   String
+    lastName    String
+    phone       String
+    email       String
+    createdAt   DateTime @default(now())
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
 
     @@index([userId])
 }
