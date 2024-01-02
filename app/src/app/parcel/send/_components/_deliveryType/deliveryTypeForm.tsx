@@ -76,7 +76,7 @@ const deliverySchema = z
     },
   );
 
-const deliverySchemaParsed = z.object({
+export const deliverySchemaParsed = z.object({
   weight: z.number().min(1).max(100).optional(),
   width: z.number().min(1).max(100).optional(),
   height: z.number().min(1).max(100).optional(),

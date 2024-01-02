@@ -3,7 +3,7 @@
 import Stepper from "./stepper";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
-import DeliveryType from "./deliveryTypeForm";
+import DeliveryType from "./_deliveryType/deliveryTypeForm";
 import { getSessionStorageValue } from "@/lib/clientUtils";
 
 const StepDeliveryIcon = () => (
@@ -143,7 +143,7 @@ const SendForm = () => {
         {step === 1 && (
           <DeliveryType key={resetKey} nextStep={() => setStep(2)} />
         )}
-        {step === 2 && <PersonalInfo nextStep={() => setStep(3)} />}
+        {step === 2 && <PersonalInfo nextStep={() => setStep(3)} resetSteps={reset} />}
         {step === 3 && <OrderSummary nextStep={() => setStep(4)} />}
         {step === 4 && <Payment nextStep={() => setStep(5)} />}
         <div className="absolute right-0 top-0 space-x-4">
