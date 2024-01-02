@@ -59,13 +59,17 @@ const StepSummaryIcon = () => (
 
 const StepPaymentIcon = () => (
   <svg
-    className="h-4 w-4"
-    aria-hidden="true"
+    className="h-5 w-5"
     xmlns="http://www.w3.org/2000/svg"
-    fill="currentColor"
-    viewBox="0 0 18 20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
   >
-    <path d="M16 1h-3.278A1.992 1.992 0 0 0 11 0H7a1.993 1.993 0 0 0-1.722 1H2a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2ZM7 2h4v3H7V2Zm5.7 8.289-3.975 3.857a1 1 0 0 1-1.393 0L5.3 12.182a1.002 1.002 0 1 1 1.4-1.436l1.328 1.289 3.28-3.181a1 1 0 1 1 1.392 1.435Z" />
+    <rect width="20" height="14" x="2" y="5" rx="2" />
+    <line x1="2" x2="22" y1="10" y2="10" />
   </svg>
 );
 
@@ -137,7 +141,9 @@ const SendForm = () => {
         {step === 1 && (
           <DeliveryType key={resetKey} nextStep={() => setStep(2)} />
         )}
-        {step === 2 && <PersonalInfo nextStep={() => setStep(3)} resetSteps={reset} />}
+        {step === 2 && (
+          <PersonalInfo nextStep={() => setStep(3)} resetSteps={reset} />
+        )}
         {step === 3 && <OrderSummary nextStep={() => setStep(4)} />}
         {step === 4 && <Payment nextStep={() => setStep(5)} />}
         <div className="absolute right-0 top-0 space-x-4">
