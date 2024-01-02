@@ -53,7 +53,7 @@ const addressSchema = z
     postalCode: z.string().min(1, "Postal code is required"),
     country: z.string().min(1, "Country is required"),
     save: z.boolean().default(false),
-    addressName: z.string().optional(),
+    addressName: z.string().optional().default(""),
   })
   .refine(({ save, addressName }) => !save || !!addressName, {
     message: "Address name is required for saving address",
@@ -67,7 +67,7 @@ const contactSchema = z
     phone: z.string().min(1, "Phone number is required"),
     email: z.string().email("Invalid email address"),
     save: z.boolean().default(false),
-    contactName: z.string().optional(),
+    contactName: z.string().optional().default(""),
   })
   .refine(({ save, contactName }) => !save || !!contactName, {
     message: "Contact name is required for saving contact",
@@ -172,7 +172,10 @@ const AddressForm = ({
               <FormControl>
                 <Switch
                   checked={field.value}
-                  onCheckedChange={field.onChange}
+                  onCheckedChange={(value) => {
+                    field.onChange(value);
+                    form.setValue(`${type}.address.addressName`, "");
+                  }}
                 />
               </FormControl>
               <FormLabel>Save Address</FormLabel>
@@ -380,7 +383,10 @@ const ContactForm = ({
                 <FormControl>
                   <Switch
                     checked={field.value}
-                    onCheckedChange={field.onChange}
+                    onCheckedChange={(value) => {
+                      field.onChange(value);
+                      form.setValue(`${type}.contact.contactName`, "");
+                    }}
                   />
                 </FormControl>
                 <FormLabel>Save Contact</FormLabel>
