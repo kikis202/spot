@@ -49,26 +49,46 @@ export const addressSchema = z
   .object({
     id: z.string().optional(),
     parcelMachineName: z.string().optional().default(""),
-    street: z.string().min(1, "Street is required"),
-    city: z.string().min(1, "City is required"),
-    postalCode: z.string().min(1, "Postal code is required"),
-    country: z.string().min(1, "Country is required"),
+    street: z.string().min(1, "Street is required").default(""),
+    city: z.string().min(1, "City is required").default(""),
+    postalCode: z.string().min(1, "Postal code is required").default(""),
+    country: z.string().min(1, "Country is required").default(""),
     save: z.boolean().default(false),
     addressName: z.string().optional().default(""),
   })
   .refine(({ save, addressName }) => !save || !!addressName, {
     message: "Address name is required for saving address",
     path: ["addressName"],
-  });
+  })
+  .refine(
+    ({ street, city, postalCode, country }) =>
+      street && city && postalCode && country,
+    {
+      message: "Parcel machine is required",
+      path: ["id"],
+    },
+  );
+
+const phoneRegex = new RegExp(
+  /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/,
+);
 
 export const contactSchema = z
   .object({
-    id: z.string().optional(),
-    name: z.string().optional(),
-    phone: z.string().min(1, "Phone number is required"),
-    email: z.string().email("Invalid email address"),
+    id: z.string().default("").optional(),
+    name: z.string().default("").optional(),
+    phone: z
+      .string()
+      .min(1, "Phone number is required")
+      .regex(phoneRegex, "Invalid Phone number")
+      .default(""),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Invalid email address")
+      .default(""),
     save: z.boolean().default(false),
-    contactName: z.string().optional().default(""),
+    contactName: z.string().default("").optional(),
   })
   .refine(({ save, contactName }) => !save || !!contactName, {
     message: "Contact name is required for saving contact",
@@ -253,11 +273,11 @@ const SelectParcelMachine = ({
             <PopoverContent align="end" className="p-0">
               <Command>
                 <CommandInput
-                  placeholder="Search framework..."
+                  placeholder="Search for parcel machine..."
                   className="h-9"
                 />
                 <CommandEmpty>No parcel machine found.</CommandEmpty>
-                <CommandGroup>
+                <CommandGroup className="max-h-52 overflow-y-scroll">
                   {data.map((parcelMachine) => (
                     <CommandItem
                       value={parcelMachine.label}
@@ -467,15 +487,54 @@ const Details = ({
   );
 };
 
+const defaultAddressValues: z.infer<typeof addressSchema> = {
+  id: "",
+  parcelMachineName: "",
+  street: "",
+  city: "",
+  postalCode: "",
+  country: "",
+  save: false,
+  addressName: "",
+};
+
+const defaultContactValues: z.infer<typeof contactSchema> = {
+  id: "",
+  name: "",
+  phone: "",
+  email: "",
+  save: false,
+  contactName: "",
+};
+
+const defaultValues: PersonalInfoFormValues = {
+  sender: {
+    address: defaultAddressValues,
+    contact: defaultContactValues,
+  },
+  receiver: {
+    address: defaultAddressValues,
+    contact: defaultContactValues,
+  },
+};
+
 type PersonalInfoProps = {
   nextStep: () => void;
   resetSteps: () => void;
 };
 
 const PersonalInfo = ({ nextStep, resetSteps }: PersonalInfoProps) => {
+  const form = useForm<PersonalInfoFormValues>({
+    resolver: zodResolver(personalInfoSchema),
+    defaultValues,
+  });
+
+  // get this step's data from session storage
   const data = useMemo(() => getSessionStorageValue("personalInfo", {}), []) as
     | PersonalInfoFormValues
     | Record<string, never>;
+
+  // get previous step's data from session storage
   const deliveryType = useMemo(() => {
     const storageData = getSessionStorageValue("deliveryType", {});
 
@@ -489,20 +548,20 @@ const PersonalInfo = ({ nextStep, resetSteps }: PersonalInfoProps) => {
     }
   }, []) as z.infer<typeof deliverySchemaParsed> | Record<string, never>;
 
-  const form = useForm<PersonalInfoFormValues>({
-    resolver: zodResolver(personalInfoSchema),
-  });
-
   useEffect(() => {
+    // if there is no data of previous step in session storage, reset steps
     if (Object.keys(deliveryType).length === 0) resetSteps();
   }, [deliveryType, resetSteps]);
 
   useEffect(() => {
+    // if there is no data in session storage, do nothing
     if (Object.keys(data).length === 0) return;
+
     try {
-      form.reset(data);
+      form.reset(personalInfoSchema.parse(data));
     } catch (e) {
       console.log(e);
+      form.reset(defaultValues);
     }
   }, [data, form]);
 
