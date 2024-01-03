@@ -71,6 +71,9 @@ model ContactInfo {
     userId String?
     user   User?   @relation(fields: [userId], references: [id])
 
+    parcelSenders   Parcel[] @relation("ParcelSenderContacts")
+    parcelRecievers Parcel[] @relation("ParcelRecieverContacts")
+
     @@index([userId])
 }
 
@@ -101,14 +104,20 @@ model Parcel {
     senderId String
     sender   User   @relation("ParcelSender", fields: [senderId], references: [id])
 
+    senderContactId String
+    senderContact   ContactInfo @relation("ParcelSenderContacts", fields: [senderContactId], references: [id])
+
+    recieverContactId String
+    recieverContact   ContactInfo @relation("ParcelRecieverContacts", fields: [recieverContactId], references: [id])
+
     courierId String?
     courier   User?   @relation("ParcelCourier", fields: [courierId], references: [id])
 
     originId String
     origin   Address @relation("ParcelOrigin", fields: [originId], references: [id])
 
-    destinationId String?
-    destination   Address? @relation("ParcelDestination", fields: [destinationId], references: [id])
+    destinationId String
+    destination   Address @relation("ParcelDestination", fields: [destinationId], references: [id])
 
     lockerId String? @unique
     locker   Locker? @relation(fields: [lockerId], references: [id])

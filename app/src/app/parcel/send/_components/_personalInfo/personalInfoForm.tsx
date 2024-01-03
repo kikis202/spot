@@ -45,7 +45,7 @@ import { z } from "zod";
 import { api } from "~/trpc/react";
 import { deliverySchemaParsed } from "../_deliveryType/deliveryTypeForm";
 
-const addressSchema = z
+export const addressSchema = z
   .object({
     id: z.string().optional(),
     parcelMachineName: z.string().optional().default(""),
@@ -61,7 +61,7 @@ const addressSchema = z
     path: ["addressName"],
   });
 
-const contactSchema = z
+export const contactSchema = z
   .object({
     id: z.string().optional(),
     name: z.string().optional(),

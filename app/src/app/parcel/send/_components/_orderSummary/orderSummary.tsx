@@ -7,9 +7,15 @@ import {
   getSessionStorageValue,
   setSessionStorageValue,
 } from "@/lib/clientUtils";
-import { useEffect, useMemo } from "react";
+import { ParcelSize } from "@prisma/client";
+import { Fragment, useCallback, useEffect, useMemo } from "react";
+import { z } from "zod";
 import { deliverySchemaParsed } from "../_deliveryType/deliveryTypeForm";
-import { personalInfoSchema } from "../_personalInfo/personalInfoForm";
+import {
+  addressSchema,
+  contactSchema,
+  personalInfoSchema,
+} from "../_personalInfo/personalInfoForm";
 
 const FileEditIcon = () => {
   return (
@@ -28,6 +34,37 @@ const FileEditIcon = () => {
       <path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z" />
     </svg>
   );
+};
+
+const parsedParcelSchema = z.object({
+  size: z.nativeEnum(ParcelSize),
+  dimensions: z.string().optional(),
+  weight: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+const parseParcel = (parcel: z.infer<typeof deliverySchemaParsed>) => {
+  try {
+    return parsedParcelSchema.parse(parcel);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const parseAddress = (address: z.infer<typeof addressSchema>) => {
+  try {
+    return addressSchema.parse(address);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const parseContact = (contact: z.infer<typeof contactSchema>) => {
+  try {
+    return contactSchema.parse(contact);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 type InfoBoxProps = {
@@ -61,10 +98,10 @@ const Summary = ({ boxes }: { boxes: InfoBoxProps[] }) => {
   return (
     <div className="my-6 space-y-4">
       {boxes.map((item, i, array) => (
-        <>
-          <InfoBox key={item.title} {...item} />
+        <Fragment key={item.title}>
+          <InfoBox {...item} />
           {i < array.length - 1 && <Separator />}
-        </>
+        </Fragment>
       ))}
     </div>
   );
@@ -79,7 +116,7 @@ const OrderSummary = ({
   setStep: (step: number) => void;
   resetSteps: () => void;
 }) => {
-  const data = useMemo(() => {
+  const { sender, receiver, deliveryType } = useMemo(() => {
     try {
       const { sender, receiver } = personalInfoSchema.parse(
         getSessionStorageValue("personalInfo", {}),
@@ -87,6 +124,18 @@ const OrderSummary = ({
       const deliveryType = deliverySchemaParsed.parse(
         getSessionStorageValue("deliveryType", {}),
       );
+
+      return { sender, receiver, deliveryType };
+    } catch (error) {
+      return {};
+    }
+  }, []);
+
+  const infoBoxData = useMemo(() => {
+    if (!sender || !receiver || !deliveryType)
+      return { parcel: [], sender: [], recipient: [] };
+
+    try {
       return {
         parcel: [
           `Size: ${deliveryType.size}${
@@ -120,42 +169,62 @@ const OrderSummary = ({
         recipient: [],
       };
     }
-  }, []);
+  }, [deliveryType, receiver, sender]);
 
   const infoBoxes: InfoBoxProps[] = useMemo(
     () => [
       {
         title: "Parcel",
-        info: data.parcel,
+        info: infoBoxData.parcel,
         goToStep: () => setStep(1),
       },
       {
         title: "Sender",
-        info: data.sender,
+        info: infoBoxData.sender,
         goToStep: () => setStep(2),
       },
       {
         title: "Recipient",
-        info: data.recipient,
+        info: infoBoxData.recipient,
         goToStep: () => setStep(2),
       },
     ],
-    [data.parcel, data.recipient, data.sender, setStep],
+    [infoBoxData.parcel, infoBoxData.recipient, infoBoxData.sender, setStep],
   );
 
   useEffect(() => {
-    if (!data.parcel.length || !data.parcel.length || !data.parcel.length)
-      resetSteps();
-  }, [data, resetSteps]);
+    if (
+      !infoBoxData.parcel.length ||
+      !infoBoxData.recipient.length ||
+      !infoBoxData.sender.length
+    ) {
+      return resetSteps();
+    }
+  }, [infoBoxData, resetSteps]);
 
-  const onSubmit = () => {
-    // TODO: format data to be sent to the server
+  const onSubmit = useCallback(() => {
+    if (!deliveryType || !sender || !receiver) return;
+
+    const parcel = parseParcel(deliveryType);
+    const sendFrom = parseAddress(sender.address);
+    const sendTo = parseAddress(receiver.address);
+    const senderContact = parseContact(sender.contact);
+    const receiverContact = parseContact(receiver.contact);
+
+    if (!parcel || !sendFrom || !sendTo || !senderContact || !receiverContact)
+      return resetSteps();
+
     const finalData = {
       accepted: true,
+      parcel,
+      sendFrom,
+      sendTo,
+      senderContact,
+      receiverContact,
     };
     setSessionStorageValue("orderSummary", finalData);
     nextStep();
-  };
+  }, [deliveryType, receiver, sender, resetSteps, nextStep]);
 
   return (
     <>
