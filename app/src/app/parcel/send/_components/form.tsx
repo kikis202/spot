@@ -1,11 +1,12 @@
 "use client";
 
-import Stepper from "./stepper";
 import { Button } from "@/components/ui/button";
+import { getSessionStorageValue } from "@/lib/clientUtils";
 import { useCallback, useEffect, useState } from "react";
 import DeliveryType from "./_deliveryType/deliveryTypeForm";
-import { getSessionStorageValue } from "@/lib/clientUtils";
+import OrderSummary from "./_orderSummary/orderSummary";
 import PersonalInfo from "./_personalInfo/personalInfoForm";
+import Stepper from "./stepper";
 
 const StepDeliveryIcon = () => (
   <svg
@@ -96,13 +97,6 @@ const steps = [
   },
 ];
 
-const OrderSummary = ({ nextStep }: { nextStep: () => void }) => {
-  return (
-    <div>
-      <Button onClick={nextStep}>Next</Button>
-    </div>
-  );
-};
 const Payment = ({ nextStep }: { nextStep: () => void }) => {
   return (
     <div>
@@ -144,7 +138,13 @@ const SendForm = () => {
         {step === 2 && (
           <PersonalInfo nextStep={() => setStep(3)} resetSteps={reset} />
         )}
-        {step === 3 && <OrderSummary nextStep={() => setStep(4)} />}
+        {step === 3 && (
+          <OrderSummary
+            nextStep={() => setStep(4)}
+            setStep={setStep}
+            resetSteps={reset}
+          />
+        )}
         {step === 4 && <Payment nextStep={() => setStep(5)} />}
         <div className="absolute right-0 top-0 space-x-4">
           {step !== 1 && (
