@@ -9,6 +9,7 @@ import {
 } from "@/lib/clientUtils";
 import { ParcelSize } from "@prisma/client";
 import { Fragment, useCallback, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 import { deliverySchemaParsed } from "../_deliveryType/deliveryTypeForm";
 import {
@@ -198,6 +199,7 @@ const OrderSummary = ({
       !infoBoxData.recipient.length ||
       !infoBoxData.sender.length
     ) {
+      toast.error("Something went wrong!");
       return resetSteps();
     }
   }, [infoBoxData, resetSteps]);
@@ -219,6 +221,7 @@ const OrderSummary = ({
       return nextStep();
     } catch (error) {
       console.log(error);
+      toast.error("Something went wrong!");
       return resetSteps();
     }
   }, [deliveryType, receiver, sender, resetSteps, nextStep]);
