@@ -1,11 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ParcelSize } from "@prisma/client";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -14,15 +9,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { H2 } from "@/components/ui/typography";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { H2 } from "@/components/ui/typography";
 import {
   getSessionStorageValue,
   setSessionStorageValue,
 } from "@/lib/clientUtils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ParcelSize } from "@prisma/client";
 import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const sendingOptions = ["parcelMachine", "courier"] as const;
 

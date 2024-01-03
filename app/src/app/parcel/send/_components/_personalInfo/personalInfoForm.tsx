@@ -2,6 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -10,44 +24,31 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { H2 } from "@/components/ui/typography";
-import {
-  getSessionStorageValue,
-  setSessionStorageValue,
-} from "@/lib/clientUtils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { deliverySchemaParsed } from "../_deliveryType/deliveryTypeForm";
 import { Input } from "@/components/ui/input";
-import { api } from "~/trpc/react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { cn } from "@/lib/utils";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
+import { H2 } from "@/components/ui/typography";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  getSessionStorageValue,
+  setSessionStorageValue,
+} from "@/lib/clientUtils";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { api } from "~/trpc/react";
+import { deliverySchemaParsed } from "../_deliveryType/deliveryTypeForm";
 
 const addressSchema = z
   .object({
     id: z.string().optional(),
+    parcelMachineName: z.string().optional().default(""),
     street: z.string().min(1, "Street is required"),
     city: z.string().min(1, "City is required"),
     postalCode: z.string().min(1, "Postal code is required"),
@@ -263,6 +264,10 @@ const SelectParcelMachine = ({
                       key={parcelMachine.value}
                       onSelect={() => {
                         field.onChange(parcelMachine.value);
+                        form.setValue(
+                          `${type}.address.parcelMachineName`,
+                          parcelMachine.label,
+                        );
                         form.setValue(
                           `${type}.address.street`,
                           parcelMachine.address.street,
