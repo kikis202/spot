@@ -1,5 +1,6 @@
 "use client";
 
+import { FileEditIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { H2 } from "@/components/ui/typography";
@@ -17,25 +18,6 @@ import {
   contactSchema,
   personalInfoSchema,
 } from "../_personalInfo/personalInfoForm";
-
-const FileEditIcon = () => {
-  return (
-    <svg
-      className="h-6 w-6"
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4 13.5V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2h-5.5" />
-      <polyline points="14 2 14 8 20 8" />
-      <path d="M10.42 12.61a2.1 2.1 0 1 1 2.97 2.97L7.95 21 4 22l.99-3.95 5.43-5.44Z" />
-    </svg>
-  );
-};
 
 const parsedParcelSchema = z.object({
   size: z.nativeEnum(ParcelSize),
@@ -68,6 +50,14 @@ const parseContact = (contact: z.infer<typeof contactSchema>) => {
   }
 };
 
+export const finalDataSchema = z.object({
+  parcel: parsedParcelSchema,
+  sendFrom: addressSchema,
+  sendTo: addressSchema,
+  senderContact: contactSchema,
+  receiverContact: contactSchema,
+});
+
 type InfoBoxProps = {
   title: string;
   info: string[];
@@ -89,7 +79,7 @@ const InfoBox = ({ title, info, goToStep }: InfoBoxProps) => {
         onClick={goToStep}
         className="cursor-pointer p-2 text-muted-foreground hover:text-primary"
       >
-        <FileEditIcon />
+        <FileEditIcon className="h-6 w-6" />
       </div>
     </div>
   );
@@ -209,7 +199,6 @@ const OrderSummary = ({
 
     try {
       const finalData = {
-        accepted: true,
         parcel: parseParcel(deliveryType),
         sendFrom: parseAddress(sender.address),
         sendTo: parseAddress(receiver.address),
@@ -217,7 +206,7 @@ const OrderSummary = ({
         receiverContact: parseContact(receiver.contact),
       };
 
-      setSessionStorageValue("orderSummary", finalData);
+      setSessionStorageValue("orderSummary", finalDataSchema.parse(finalData));
       return nextStep();
     } catch (error) {
       console.log(error);
