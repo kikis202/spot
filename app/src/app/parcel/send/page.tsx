@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/app-layout";
 import UserPage from "@/components/role/user";
-import { H1 } from "@/components/ui/typohraphy";
+import { H1 } from "@/components/ui/typography";
 import SendForm from "./_components/form";
 
 const SendParcel = () => {

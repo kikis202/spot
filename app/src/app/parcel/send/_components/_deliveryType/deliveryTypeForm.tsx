@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { H2 } from "@/components/ui/typohraphy";
+import { H2 } from "@/components/ui/typography";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import {

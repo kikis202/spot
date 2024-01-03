@@ -10,7 +10,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { H2 } from "@/components/ui/typohraphy";
+import { H2 } from "@/components/ui/typography";
 import {
   getSessionStorageValue,
   setSessionStorageValue,
