@@ -47,7 +47,7 @@ const parseParcel = (parcel: z.infer<typeof deliverySchemaParsed>) => {
   try {
     return parsedParcelSchema.parse(parcel);
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 };
 
@@ -55,7 +55,7 @@ const parseAddress = (address: z.infer<typeof addressSchema>) => {
   try {
     return addressSchema.parse(address);
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 };
 
@@ -63,7 +63,7 @@ const parseContact = (contact: z.infer<typeof contactSchema>) => {
   try {
     return contactSchema.parse(contact);
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 };
 
@@ -205,25 +205,22 @@ const OrderSummary = ({
   const onSubmit = useCallback(() => {
     if (!deliveryType || !sender || !receiver) return;
 
-    const parcel = parseParcel(deliveryType);
-    const sendFrom = parseAddress(sender.address);
-    const sendTo = parseAddress(receiver.address);
-    const senderContact = parseContact(sender.contact);
-    const receiverContact = parseContact(receiver.contact);
+    try {
+      const finalData = {
+        accepted: true,
+        parcel: parseParcel(deliveryType),
+        sendFrom: parseAddress(sender.address),
+        sendTo: parseAddress(receiver.address),
+        senderContact: parseContact(sender.contact),
+        receiverContact: parseContact(receiver.contact),
+      };
 
-    if (!parcel || !sendFrom || !sendTo || !senderContact || !receiverContact)
+      setSessionStorageValue("orderSummary", finalData);
+      return nextStep();
+    } catch (error) {
+      console.log(error);
       return resetSteps();
-
-    const finalData = {
-      accepted: true,
-      parcel,
-      sendFrom,
-      sendTo,
-      senderContact,
-      receiverContact,
-    };
-    setSessionStorageValue("orderSummary", finalData);
-    nextStep();
+    }
   }, [deliveryType, receiver, sender, resetSteps, nextStep]);
 
   return (
