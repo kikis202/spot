@@ -373,7 +373,7 @@ const DeliveryType = ({ nextStep }: { nextStep: () => void }) => {
               </FormItem>
             )}
           />
-          <Button className="mt-10" type="submit">
+          <Button className="mt-6" type="submit">
             Next
           </Button>
         </form>

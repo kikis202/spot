@@ -16,7 +16,7 @@ import {
   setSessionStorageValue,
 } from "@/lib/clientUtils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { deliverySchemaParsed } from "../_deliveryType/deliveryTypeForm";
@@ -85,18 +85,15 @@ export const personalInfoSchema = z.object({
   }),
 });
 
-export type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
+type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 
-type PersonalInfoProps = {
-  nextStep: () => void;
-  resetSteps: () => void;
-};
+type DeliveryTypeForm = ReturnType<typeof useForm<PersonalInfoFormValues>>;
 
 const AddressForm = ({
   form,
   type,
 }: {
-  form: ReturnType<typeof useForm<PersonalInfoFormValues>>;
+  form: DeliveryTypeForm;
   type: "sender" | "receiver";
 }) => {
   const saveAddress = form.watch(`${type}.address.save`);
@@ -207,7 +204,7 @@ const SelectParcelMachine = ({
   form,
   type,
 }: {
-  form: ReturnType<typeof useForm<PersonalInfoFormValues>>;
+  form: DeliveryTypeForm;
   type: "sender" | "receiver";
 }) => {
   const { data: parcelMachines, isLoading } =
@@ -313,7 +310,7 @@ const ContactForm = ({
   form,
   type,
 }: {
-  form: ReturnType<typeof useForm<PersonalInfoFormValues>>;
+  form: DeliveryTypeForm;
   type: "sender" | "receiver";
 }) => {
   const saveContact = form.watch(`${type}.contact.save`);
@@ -420,7 +417,7 @@ const DeliveryForm = ({
   type,
   method,
 }: {
-  form: ReturnType<typeof useForm<PersonalInfoFormValues>>;
+  form: DeliveryTypeForm;
   type: "sender" | "receiver";
   method: "courier" | "parcelMachine";
 }) => {
@@ -441,6 +438,33 @@ const DeliveryForm = ({
       </CardContent>
     </Card>
   );
+};
+
+const Details = ({
+  form,
+  type,
+  method,
+}: {
+  form: DeliveryTypeForm;
+  type: "sender" | "receiver";
+  method: "courier" | "parcelMachine";
+}) => {
+  return (
+    <>
+      <H2 className="capitalize">{type}</H2>
+      <div className="flex space-x-6">
+        {/* contact */}
+        <ContactForm form={form} type={type} />
+        {/* address */}
+        <DeliveryForm form={form} type={type} method={method} />
+      </div>
+    </>
+  );
+};
+
+type PersonalInfoProps = {
+  nextStep: () => void;
+  resetSteps: () => void;
 };
 
 const PersonalInfo = ({ nextStep, resetSteps }: PersonalInfoProps) => {
@@ -486,33 +510,15 @@ const PersonalInfo = ({ nextStep, resetSteps }: PersonalInfoProps) => {
     <div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <H2>Sender</H2>
-          <div className="my-6 flex space-x-6">
-            {/* contact */}
-            <ContactForm form={form} type="sender" />
-            {/* address */}
-            <DeliveryForm
-              form={form}
-              type="sender"
-              method={deliveryType.origin}
-            />
-          </div>
-
-          <H2>Reciever</H2>
-          <div className="my-6 flex space-x-6">
-            {/* contact */}
-            <ContactForm form={form} type="receiver" />
-            {/* address */}
-            <DeliveryForm
+          <div className="space-y-6">
+            <Details form={form} type="sender" method={deliveryType.origin} />
+            <Details
               form={form}
               type="receiver"
               method={deliveryType.destination}
             />
+            <Button type="submit">Next</Button>
           </div>
-
-          <Button className="mt-6" type="submit">
-            Next
-          </Button>
         </form>
       </Form>
     </div>
