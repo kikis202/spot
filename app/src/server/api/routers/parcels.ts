@@ -1,3 +1,7 @@
+import { ParcelSize, ParcelStatus } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import { db } from "~/server/db";
 import {
   adminProcedure,
@@ -6,10 +10,6 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "../trpc";
-import { z } from "zod";
-import { ParcelSize, ParcelStatus } from "@prisma/client";
-import { TRPCError } from "@trpc/server";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const generateTrackingNumber = () => {
   const prefix = "SPOT";

@@ -1,12 +1,12 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { db } from "~/server/db";
 import {
   adminProcedure,
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from "../trpc";
-import { db } from "~/server/db";
-import { TRPCError } from "@trpc/server";
 
 export const addressesRouter = createTRPCRouter({
   getAll: adminProcedure
