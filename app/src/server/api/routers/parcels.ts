@@ -85,9 +85,34 @@ export const parcelsRouter = createTRPCRouter({
         skip: input.size * (input.page - 1),
         take: input.size,
         where: { senderId, ...input.query },
+        orderBy: { updatedAt: "desc" },
+        select: {
+          trackingNumber: true,
+          status: true,
+          createdAt: true,
+          destination: {
+            select: {
+              parcelMachine: {
+                select: { name: true },
+              },
+
+              street: true,
+              city: true,
+            },
+          },
+          updates: {
+            select: { createdAt: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
       });
 
-      return parcels;
+      const count = await db.parcel.count({
+        where: { senderId, ...input.query },
+      });
+
+      return { parcels, count };
     }),
   getAssigned: courierProcedure
     .input(

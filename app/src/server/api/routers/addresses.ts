@@ -35,6 +35,15 @@ export const addressesRouter = createTRPCRouter({
 
       return addresses;
     }),
+  getMy: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const addresses = await db.address.findMany({
+      where: { userId },
+    });
+
+    return addresses;
+  }),
   get: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {

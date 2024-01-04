@@ -135,7 +135,7 @@ const Payment = ({ resetSteps }: { resetSteps: () => void }) => {
         }),
       );
       resetSteps();
-      router.push(`/parcel/track/${result.trackingNumber}`);
+      router.push(`/parcel/view/${result.trackingNumber}`);
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong. Please try again.");

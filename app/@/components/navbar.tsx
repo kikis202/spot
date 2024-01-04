@@ -74,6 +74,10 @@ const navLinks: navLinks = {
       href: "/parcel/send",
     },
     {
+      name: "My parcels",
+      href: "/parcel/own",
+    },
+    {
       name: "Track parcel",
       href: "/parcel/track",
     },
