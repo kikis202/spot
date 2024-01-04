@@ -23,6 +23,7 @@ import { ParcelSize } from "@prisma/client";
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ParcelSizeUI } from "~/helpers/enumTranslations";
 
 const sendingOptions = ["parcelMachine", "courier"] as const;
 
@@ -263,21 +264,11 @@ const DeliveryType = ({ nextStep }: { nextStep: () => void }) => {
                         }}
                         {...field}
                       >
-                        <ToggleGroupItem value={ParcelSize.SMALL}>
-                          {ParcelSize.SMALL}
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value={ParcelSize.MEDIUM}>
-                          {ParcelSize.MEDIUM}
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value={ParcelSize.LARGE}>
-                          {ParcelSize.LARGE}
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value={ParcelSize.XLARGE}>
-                          {ParcelSize.XLARGE}
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value={ParcelSize.CUSTOM}>
-                          {ParcelSize.CUSTOM}
-                        </ToggleGroupItem>
+                        {Object.values(ParcelSize).map((size) => (
+                          <ToggleGroupItem key={size} value={size}>
+                            {ParcelSizeUI[size]}
+                          </ToggleGroupItem>
+                        ))}
                       </ToggleGroup>
                     </FormControl>
                     <FormMessage />
