@@ -154,6 +154,29 @@ export const parcelsRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const parcel = await db.parcel.findUnique({
         where: { trackingNumber: input.trackingNumber },
+        select: {
+          status: true,
+          updates: {
+            select: {
+              id: true,
+              status: true,
+              title: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          destination: {
+            select: {
+              parcelMachine: {
+                select: { name: true },
+              },
+
+              street: true,
+              city: true,
+              postalCode: true,
+            },
+          },
+        },
       });
 
       if (!parcel) {
@@ -226,6 +249,14 @@ export const parcelsRouter = createTRPCRouter({
         },
       });
 
+      await db.parcelUpdate.create({
+        data: {
+          parcelId: parcel.id,
+          status: parcel.status,
+          title: "Order created",
+        },
+      });
+
       return parcel;
     }),
   assignMany: courierProcedure
@@ -260,9 +291,9 @@ export const parcelsRouter = createTRPCRouter({
     .input(
       z.object({
         parcelId: z.string(),
+        title: z.string(),
         status: z.nativeEnum(ParcelStatus),
         lockerId: z.string().optional(),
-        notes: z.string().max(255, "Note too long").optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -287,16 +318,19 @@ export const parcelsRouter = createTRPCRouter({
         });
       }
 
-      const updatedParcel = await db.parcel.update({
-        where: { id: input.parcelId },
-        data: { status: input.status, lockerId: input.lockerId },
-      });
-
       await db.parcelUpdate.create({
         data: {
           parcelId: input.parcelId,
           status: input.status,
-          notes: input.notes,
+          title: input.title,
+        },
+      });
+
+      const updatedParcel = await db.parcel.update({
+        where: { id: input.parcelId },
+        data: {
+          status: input.status,
+          ...(input.lockerId && { lockerId: input.lockerId }),
         },
       });
 
