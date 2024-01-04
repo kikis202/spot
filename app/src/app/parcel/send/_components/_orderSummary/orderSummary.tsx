@@ -137,7 +137,7 @@ const OrderSummary = ({
         ],
         sender: [
           `Contact info: ${
-            sender.contact.name ? sender.contact.name + " " : ""
+            sender.contact.fullName ? sender.contact.fullName + " " : ""
           }${sender.contact.email}, ${sender.contact.phone}`,
           sender.address.id
             ? `Parcel Machine: ${sender.address.parcelMachineName}`
@@ -145,7 +145,7 @@ const OrderSummary = ({
         ],
         recipient: [
           `Contact info: ${
-            receiver.contact.name ? receiver.contact.name + " " : ""
+            receiver.contact.fullName ? receiver.contact.fullName + " " : ""
           }${receiver.contact.email}, ${receiver.contact.phone}`,
           receiver.address.id
             ? `Parcel Machine: ${receiver.address.parcelMachineName}`

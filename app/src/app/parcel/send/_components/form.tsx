@@ -73,7 +73,7 @@ const SendForm = () => {
             resetSteps={reset}
           />
         )}
-        {step === 4 && <Payment />}
+        {step === 4 && <Payment resetSteps={reset} />}
         <div className="absolute right-0 top-0 space-x-4">
           {step !== 1 && (
             <Button

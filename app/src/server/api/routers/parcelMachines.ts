@@ -12,10 +12,10 @@ export const parcelMachinesRouter = createTRPCRouter({
   getAll: publicProcedure.query(async () => {
     const parcelMachines = await db.parcelMachine.findMany({
       select: {
-        id: true,
         name: true,
         address: {
           select: {
+            id: true,
             street: true,
             city: true,
             postalCode: true,

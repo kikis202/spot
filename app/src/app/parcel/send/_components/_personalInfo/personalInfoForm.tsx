@@ -76,7 +76,7 @@ const phoneRegex = new RegExp(
 export const contactSchema = z
   .object({
     id: z.string().default("").optional(),
-    name: z.string().default("").optional(),
+    fullName: z.string().default("").optional(),
     phone: z
       .string()
       .min(1, "Phone number is required")
@@ -210,7 +210,7 @@ const AddressForm = ({
             <FormItem>
               <FormLabel>Save address as</FormLabel>
               <FormControl>
-                <Input {...field} type="text" placeholder="Enter name" />
+                <Input {...field} type="text" placeholder="Enter address name" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -239,7 +239,7 @@ const SelectParcelMachine = ({
 
   const data = parcelMachines.map((parcelMachine) => ({
     label: parcelMachine.name,
-    value: parcelMachine.id,
+    value: parcelMachine.address.id,
     address: parcelMachine.address,
   }));
 
@@ -350,7 +350,7 @@ const ContactForm = ({
         <div className="space-y-2">
           <FormField
             control={form.control}
-            name={`${type}.contact.name`}
+            name={`${type}.contact.fullName`}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Name</FormLabel>
@@ -425,7 +425,7 @@ const ContactForm = ({
               <FormItem>
                 <FormLabel>Save contact as</FormLabel>
                 <FormControl>
-                  <Input {...field} type="text" placeholder="Enter name" />
+                  <Input {...field} type="text" placeholder="Enter contact's name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -500,7 +500,7 @@ const defaultAddressValues: z.infer<typeof addressSchema> = {
 
 const defaultContactValues: z.infer<typeof contactSchema> = {
   id: "",
-  name: "",
+  fullName: "",
   phone: "",
   email: "",
   save: false,

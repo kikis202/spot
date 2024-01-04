@@ -72,7 +72,7 @@ model ContactInfo {
     user   User?   @relation(fields: [userId], references: [id])
 
     parcelSenders   Parcel[] @relation("ParcelSenderContacts")
-    parcelRecievers Parcel[] @relation("ParcelRecieverContacts")
+    parcelReceivers Parcel[] @relation("ParcelReceiverContacts")
 
     @@index([userId])
 }
@@ -107,8 +107,8 @@ model Parcel {
     senderContactId String
     senderContact   ContactInfo @relation("ParcelSenderContacts", fields: [senderContactId], references: [id])
 
-    recieverContactId String
-    recieverContact   ContactInfo @relation("ParcelRecieverContacts", fields: [recieverContactId], references: [id])
+    receiverContactId String
+    receiverContact   ContactInfo @relation("ParcelReceiverContacts", fields: [receiverContactId], references: [id])
 
     courierId String?
     courier   User?   @relation("ParcelCourier", fields: [courierId], references: [id])

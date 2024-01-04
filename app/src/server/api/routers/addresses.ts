@@ -51,16 +51,16 @@ export const addressesRouter = createTRPCRouter({
         city: z.string(),
         postalCode: z.string(),
         country: z.string(),
-        userId: z.string(),
+        addressName: z.string().optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
       const address = await db.address.create({
         data: {
           ...input,
-          userId,
+          ...(input.addressName && { userId }),
         },
       });
 

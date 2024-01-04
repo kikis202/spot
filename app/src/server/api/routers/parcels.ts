@@ -2,6 +2,7 @@ import { ParcelSize, ParcelStatus } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { parcelCreateInputSchema } from "~/helpers/dbSchemas";
 import { db } from "~/server/db";
 import {
   adminProcedure,
@@ -207,17 +208,8 @@ export const parcelsRouter = createTRPCRouter({
       }
     }),
   create: protectedProcedure
-    .input(
-      z.object({
-        weight: z.number(),
-        size: z.nativeEnum(ParcelSize),
-        notes: z.string().max(255, "Note too long").optional(),
-        originId: z.string(),
-        destinationId: z.string(),
-        lockerId: z.string().optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
+    .input(parcelCreateInputSchema)
+    .mutation(async ({ ctx, input }) => {
       const senderId = ctx.session.user.id;
 
       await checkIfAddressExists(input.originId, "Origin address not found");
@@ -228,14 +220,9 @@ export const parcelsRouter = createTRPCRouter({
 
       const parcel = await db.parcel.create({
         data: {
+          ...input,
           senderId,
           trackingNumber: generateTrackingNumber(),
-          weight: input.weight,
-          size: input.size,
-          notes: input.notes,
-          originId: input.originId,
-          destinationId: input.destinationId,
-          lockerId: input.lockerId,
         },
       });
 
