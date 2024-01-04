@@ -165,14 +165,41 @@ export const parcelsRouter = createTRPCRouter({
 
       const parcels = (
         await db.trackedParcels.findMany({
-          include: { parcel: true },
+          select: {
+            parcel: {
+              select: {
+                trackingNumber: true,
+                status: true,
+                createdAt: true,
+                destination: {
+                  select: {
+                    parcelMachine: {
+                      select: { name: true },
+                    },
+
+                    street: true,
+                    city: true,
+                  },
+                },
+                updates: {
+                  select: { createdAt: true },
+                  orderBy: { createdAt: "desc" },
+                  take: 1,
+                },
+              },
+            },
+          },
           skip: input.size * (input.page - 1),
           take: input.size,
           where: { userId, parcel: { ...input.query } },
         })
       ).map(({ parcel }) => parcel);
 
-      return parcels;
+      const count = await db.trackedParcels.count({
+        where: { userId, parcel: { ...input.query } },
+      });
+
+      return { parcels, count };
     }),
   getOne: publicProcedure
     .input(z.object({ trackingNumber: z.string() }))
