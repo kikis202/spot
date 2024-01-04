@@ -81,7 +81,7 @@ model ParcelUpdate {
     id        String       @id @default(cuid())
     parcelId  String
     status    ParcelStatus
-    notes     String?      @db.Text
+    title     String
     createdAt DateTime     @default(now())
 
     parcel Parcel @relation(fields: [parcelId], references: [id])
@@ -178,7 +178,6 @@ enum LockerSize {
     MEDIUM
     LARGE
     XLARGE
-    CUSTOM
 }
 
 model TrackedParcels {

@@ -1,7 +1,7 @@
 import { LockerSize, PrismaClient } from "@prisma/client";
 
 const getRandomLockerSize = () => {
-  const sizes = Object.values(LockerSize).filter((size) => size !== "CUSTOM");
+  const sizes = Object.values(LockerSize);
   const randomIndex = Math.floor(Math.random() * sizes.length);
   const size = sizes[randomIndex];
   if (!size) throw new Error("No locker size found");

@@ -5,7 +5,7 @@ CREATE TYPE "ParcelStatus" AS ENUM ('PENDING', 'IN_TRANSIT', 'OUT_FOR_DELIVERY',
 CREATE TYPE "ParcelSize" AS ENUM ('SMALL', 'MEDIUM', 'LARGE', 'XLARGE', 'CUSTOM');
 
 -- CreateEnum
-CREATE TYPE "LockerSize" AS ENUM ('SMALL', 'MEDIUM', 'LARGE', 'XLARGE', 'CUSTOM');
+CREATE TYPE "LockerSize" AS ENUM ('SMALL', 'MEDIUM', 'LARGE', 'XLARGE');
 
 -- CreateTable
 CREATE TABLE "Address" (
