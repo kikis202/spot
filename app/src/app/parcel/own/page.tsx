@@ -1,10 +1,11 @@
 import { MainLayout } from "@/components/app-layout";
+import UserPage from "@/components/role/user";
 import { H1 } from "@/components/ui/typography";
 import { ParcelSize, ParcelStatus } from "@prisma/client";
+import { z } from "zod";
 import { api } from "~/trpc/server";
 import ParcelTable from "../_components/table";
 import TableFilter from "../_components/tableFilter";
-import { z } from "zod";
 
 export type TrackParcelProps = {
   searchParams: {
@@ -59,20 +60,26 @@ const TrackParcel = async ({ searchParams }: TrackParcelProps) => {
   const addresses = await api.addresses.getMy.query();
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <H1>Your Parcels</H1>
-        <TableFilter searchParams={searchParams} addresses={addresses} />
-        <ParcelTable
-          page={page}
-          size={size}
-          data={parcels}
-          totalCount={count}
-          searchParams={searchParams}
-        />
-      </div>
-    </MainLayout>
+      <MainLayout>
+        <div className="space-y-6">
+          <H1>Your Parcels</H1>
+          <TableFilter searchParams={searchParams} addresses={addresses} />
+          <ParcelTable
+            page={page}
+            size={size}
+            data={parcels}
+            totalCount={count}
+            searchParams={searchParams}
+          />
+        </div>
+      </MainLayout>
   );
 };
 
-export default TrackParcel;
+export default function TrackParcelPage(props: TrackParcelProps) {
+  return (
+    <UserPage>
+      <TrackParcel {...props} />
+    </UserPage>
+  );
+};

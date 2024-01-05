@@ -1,11 +1,11 @@
 import { MainLayout } from "@/components/app-layout";
+import UserPage from "@/components/role/user";
 import { H1 } from "@/components/ui/typography";
 import { ParcelSize, ParcelStatus } from "@prisma/client";
+import { z } from "zod";
 import { api } from "~/trpc/server";
 import ParcelTable from "../_components/table";
 import TableFilter from "../_components/tableFilter";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
 
 export type TrackParcelProps = {
   searchParams: {
@@ -64,9 +64,6 @@ const TrackParcel = async ({ searchParams }: TrackParcelProps) => {
       <div className="space-y-6">
         <H1>Track Parcels</H1>
         <TableFilter searchParams={searchParams} addresses={addresses} />
-        <Button>
-          Add new parcel to tracked list
-        </Button>
         <ParcelTable
           page={page}
           size={size}
@@ -79,4 +76,10 @@ const TrackParcel = async ({ searchParams }: TrackParcelProps) => {
   );
 };
 
-export default TrackParcel;
+export default function TrackParcelPage(props: TrackParcelProps) {
+  return (
+    <UserPage>
+      <TrackParcel {...props} />
+    </UserPage>
+  );
+}
