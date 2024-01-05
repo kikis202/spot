@@ -203,8 +203,14 @@ export const parcelsRouter = createTRPCRouter({
     }),
   getOne: publicProcedure
     .input(z.object({ trackingNumber: z.string() }))
-    .query(async ({ input }) => {
-      const parcel = await db.parcel.findUnique({
+    .query(async ({ ctx, input }) => {
+      let userId = null;
+
+      if (ctx.session && ctx.session.user) {
+        userId = ctx.session.user.id;
+      }
+
+      const result = await db.parcel.findUnique({
         where: { trackingNumber: input.trackingNumber },
         select: {
           status: true,
@@ -228,21 +234,42 @@ export const parcelsRouter = createTRPCRouter({
               postalCode: true,
             },
           },
+          ...(userId && {
+            sender: {
+              select: {
+                id: true,
+              },
+            },
+          }),
+          ...(userId && {
+            usersTracking: {
+              select: {
+                userId: true,
+              },
+              where: { userId },
+            },
+          }),
         },
       });
 
-      if (!parcel) {
+      if (!result) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Parcel not found",
         });
       }
 
-      return parcel;
+      const { usersTracking, sender, ...parcel } = result;
+
+      return {
+        parcel,
+        isTracked: usersTracking && !!usersTracking.length,
+        isSender: sender && sender.id === userId,
+      };
     }),
   trackOne: protectedProcedure
     .input(z.object({ trackingNumber: z.string() }))
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
       const parcel = await db.parcel.findUnique({
@@ -280,6 +307,34 @@ export const parcelsRouter = createTRPCRouter({
             message: "An unexpected error occurred.",
           });
         }
+      }
+    }),
+  stopTracking: protectedProcedure
+    .input(z.object({ trackingNumber: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const parcel = await db.parcel.findUnique({
+        where: { trackingNumber: input.trackingNumber },
+        select: { id: true },
+      });
+
+      if (!parcel) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Parcel not found",
+        });
+      }
+
+      const result = await db.trackedParcels.delete({
+        where: { userId_parcelId: { userId, parcelId: parcel.id } },
+      });
+
+      if (!result) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Parcel not tracked",
+        });
       }
     }),
   create: protectedProcedure

@@ -7,13 +7,17 @@ import moment from "moment";
 import { notFound } from "next/navigation";
 import { Fragment } from "react";
 import { ParcelStatusUI } from "~/helpers/enumTranslations";
+import { getServerAuthSession } from "~/server/auth";
 import { api } from "~/trpc/server";
+import { StartTracking, StopTracking } from "./trackParcel";
 
 import type { ParcelStatus } from "@prisma/client";
 
 type ParcelInfoProps = {
   trackingNumber: string;
   status: ParcelStatus;
+  canTrack: boolean;
+  isTracked: boolean;
   destination: {
     parcelMachine?: string;
     street: string;
@@ -24,34 +28,52 @@ type ParcelInfoProps = {
 
 const ParcelInfo = (props: ParcelInfoProps) => {
   return (
-    <Card className="h-fit w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Info</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4">
-          <div className="flex items-center gap-2">
-            <ParcelIcon className="h-6 w-6" />
-            <h3 className="text-lg font-semibold">
-              Current Status: {ParcelStatusUI[props.status]}
-            </h3>
-          </div>
-          <div className="grid gap-2">
-            <h4 className="text-base font-semibold">Destination Address:</h4>
-            <div className="grid gap-1">
-              {props.destination.parcelMachine && (
-                <div className="text-sm">{props.destination.parcelMachine}</div>
-              )}
-              <div className="text-sm">Street: {props.destination.street}</div>
-              <div className="text-sm">City: {props.destination.city}</div>
-              <div className="text-sm">
-                Postal Code: {props.destination.postalCode}
+    <div className="flex w-full max-w-md flex-col gap-6">
+      <Card className="h-fit w-full">
+        <CardHeader>
+          <CardTitle>Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <div className="flex items-center gap-2">
+              <ParcelIcon className="h-6 w-6" />
+              <h3 className="text-lg font-semibold">
+                Current Status: {ParcelStatusUI[props.status]}
+              </h3>
+            </div>
+            <div className="grid gap-2">
+              <h4 className="text-base font-semibold">Destination Address:</h4>
+              <div className="grid gap-1">
+                {props.destination.parcelMachine && (
+                  <div className="text-sm">
+                    {props.destination.parcelMachine}
+                  </div>
+                )}
+                <div className="text-sm">
+                  Street: {props.destination.street}
+                </div>
+                <div className="text-sm">City: {props.destination.city}</div>
+                <div className="text-sm">
+                  Postal Code: {props.destination.postalCode}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      {props.canTrack && (
+        <StartTracking
+          className="self-end"
+          trackingNumber={props.trackingNumber}
+        />
+      )}
+      {props.isTracked && (
+        <StopTracking
+          className="self-end"
+          trackingNumber={props.trackingNumber}
+        />
+      )}
+    </div>
   );
 };
 
@@ -105,22 +127,27 @@ const TrackingPage = async ({
     trackingNumber: string;
   };
 }) => {
-  const data = await api.parcels.getOne.query({ trackingNumber }).catch(() => {
-    notFound();
-  });
+  const session = await getServerAuthSession();
+  const { parcel, isTracked, isSender } = await api.parcels.getOne
+    .query({ trackingNumber })
+    .catch(() => {
+      notFound();
+    });
 
   const updates: UpdatesProps = {
-    updates: data.updates,
+    updates: parcel.updates,
   };
 
   const parcelInfo: ParcelInfoProps = {
     trackingNumber: trackingNumber,
-    status: data.status,
+    status: parcel.status,
+    canTrack: !!session && !isTracked && !isSender,
+    isTracked,
     destination: {
-      parcelMachine: data.destination.parcelMachine?.name,
-      street: data.destination.street,
-      city: data.destination.city,
-      postalCode: data.destination.postalCode,
+      parcelMachine: parcel.destination.parcelMachine?.name,
+      street: parcel.destination.street,
+      city: parcel.destination.city,
+      postalCode: parcel.destination.postalCode,
     },
   };
 
