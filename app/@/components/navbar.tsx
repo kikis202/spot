@@ -35,33 +35,14 @@ const navLinks: navLinks = {
     {
       name: "Sending parcels",
       href: "/",
-      childs: [
-        {
-          name: "Private customers",
-          href: "/",
-          description: "Send parcels within Latvia and abroad",
-        },
-        {
-          name: "Business customers",
-          href: "/",
-        },
-        {
-          name: "Shipping abroad",
-          href: "/",
-        },
-      ],
     },
     {
-      name: "Tracking",
-      href: "/",
+      name: "Find parcel",
+      href: "/parcel/view",
     },
     {
       name: "Sign in",
       href: "/api/auth/signin",
-    },
-    {
-      name: "Sign up",
-      href: "/",
     },
   ],
   USER: [
@@ -78,8 +59,12 @@ const navLinks: navLinks = {
       href: "/parcel/own",
     },
     {
-      name: "Track parcel",
+      name: "Tracked parcels",
       href: "/parcel/track",
+    },
+    {
+      name: "Find parcel",
+      href: "/parcel/view",
     },
     {
       name: "Sign out",
