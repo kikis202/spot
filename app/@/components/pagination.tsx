@@ -43,7 +43,7 @@ type PaginationProps = {
   currentPage: number;
   size: number;
   totalCount: number;
-  searchParams: object;
+  searchParams?: object;
 };
 
 const Paginator = ({
