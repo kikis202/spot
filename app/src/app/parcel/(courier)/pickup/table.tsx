@@ -59,8 +59,6 @@ type ParcelTableParams = {
 const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
   const [selected, setSelected] = useState<Parcel["id"][]>([]);
 
-  console.log(selected);
-
   return (
     <>
       <Table>

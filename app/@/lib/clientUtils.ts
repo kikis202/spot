@@ -64,7 +64,6 @@ export function setSessionStorageValue<T>(key: string, value: T) {
   if (value === undefined) {
     window.sessionStorage.removeItem(key);
   } else {
-    console.log("setting", key, value);
     window.sessionStorage.setItem(key, JSON.stringify(value));
   }
 }

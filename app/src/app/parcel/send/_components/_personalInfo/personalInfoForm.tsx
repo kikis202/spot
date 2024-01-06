@@ -542,8 +542,8 @@ const PersonalInfo = ({ nextStep, resetSteps }: PersonalInfoProps) => {
     try {
       const data = deliverySchemaParsed.parse(storageData);
       return data;
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.log(error);
       return {};
     }
   }, []) as z.infer<typeof deliverySchemaParsed> | Record<string, never>;
@@ -559,8 +559,8 @@ const PersonalInfo = ({ nextStep, resetSteps }: PersonalInfoProps) => {
 
     try {
       form.reset(personalInfoSchema.parse(data));
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.log(error);
       form.reset(defaultValues);
     }
   }, [data, form]);

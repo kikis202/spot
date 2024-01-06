@@ -55,8 +55,6 @@ const TableFilter = ({ searchParams }: UpdateOrderProps) => {
     defaultValues,
   });
 
-  console.log(searchParams);
-
   useEffect(() => {
     try {
       form.reset(

@@ -70,8 +70,6 @@ const TableFilter = ({
     defaultValues,
   });
 
-  console.log(searchParams);
-
   useEffect(() => {
     try {
       form.reset(

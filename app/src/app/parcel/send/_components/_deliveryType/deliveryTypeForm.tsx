@@ -216,8 +216,8 @@ const DeliveryType = ({ nextStep }: { nextStep: () => void }) => {
       }
 
       form.reset(deliverySchema.parse(parsedData));
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.log(error);
     }
   }, [data, form]);
 
