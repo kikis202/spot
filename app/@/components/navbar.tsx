@@ -71,7 +71,20 @@ const navLinks: navLinks = {
       href: "/api/auth/signout",
     },
   ],
-  COURIER: [],
+  COURIER: [
+    {
+      name: "Home",
+      href: "/",
+    },
+    {
+      name: "Pick up parcels",
+      href: "/parcel/pickup",
+    },
+    {
+      name: "Update parcel status",
+      href: "/parcel/update",
+    },
+  ],
   BUISNESS: [],
   SUPPORT: [],
   ADMIN: [],
