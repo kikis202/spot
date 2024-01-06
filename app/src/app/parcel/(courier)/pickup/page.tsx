@@ -21,8 +21,10 @@ const PickupOrder = async ({ searchParams }: PickupOrderProps) => {
 
   return (
     <MainLayout>
-      <H1>Pickup order</H1>
-      <ParcelTable data={parcels} page={page} size={size} totalCount={count} />
+      <div className="space-y-6">
+        <H1>Pickup order</H1>
+        <ParcelTable data={parcels} page={page} size={size} totalCount={count} />
+      </div>
     </MainLayout>
   );
 };

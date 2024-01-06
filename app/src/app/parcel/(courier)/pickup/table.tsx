@@ -41,7 +41,7 @@ const SubmitSelected = ({ parcelIds }: { parcelIds: string[] }) => {
   };
 
   return (
-    <Button onClick={handleSubmit}>
+    <Button disabled={loading || parcelIds.length === 0} onClick={handleSubmit}>
       {loading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
       Pick up selected
     </Button>
@@ -62,7 +62,7 @@ const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
   console.log(selected);
 
   return (
-    <div className="space-y-6">
+    <>
       <Table>
         <TableHeader>
           <TableRow>
@@ -135,7 +135,7 @@ const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
         <TableCaption>Select parcels and asign them to yourself</TableCaption>
       </Table>
       <SubmitSelected parcelIds={selected} />
-    </div>
+    </>
   );
 };
 
