@@ -172,13 +172,18 @@ export const parcelsRouter = createTRPCRouter({
         query: z
           .object({
             trackingNumber: z.string().optional(),
-            status: z.nativeEnum(ParcelStatus).optional(),
+            status: z
+              .nativeEnum(ParcelStatus)
+              .optional()
+              .default(ParcelStatus.PENDING),
             size: z.nativeEnum(ParcelSize).optional(),
             originId: z.string().optional(),
             destinationId: z.string().optional(),
           })
           .optional()
-          .default({}),
+          .default({
+            status: ParcelStatus.PENDING,
+          }),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -188,9 +193,40 @@ export const parcelsRouter = createTRPCRouter({
         skip: input.size * (input.page - 1),
         take: input.size,
         where: { courierId, ...input.query },
+        orderBy: [{ destination: { postalCode: "asc" } }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          createdAt: true,
+          destination: {
+            select: {
+              parcelMachine: {
+                select: { name: true },
+              },
+
+              street: true,
+              city: true,
+              postalCode: true,
+            },
+          },
+          origin: {
+            select: {
+              parcelMachine: {
+                select: { name: true },
+              },
+
+              street: true,
+              city: true,
+              postalCode: true,
+            },
+          },
+        },
       });
 
-      return parcels;
+      const count = await db.parcel.count({
+        where: { courierId, ...input.query },
+      });
+
+      return { parcels, count };
     }),
   // parcels from TrackedParcels model
   getTracked: protectedProcedure
