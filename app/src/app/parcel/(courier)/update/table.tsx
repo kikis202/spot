@@ -1,5 +1,7 @@
 "use client";
 
+import Paginator from "@/components/pagination";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,45 +12,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Paginator from "@/components/pagination";
-
-import { Button } from "@/components/ui/button";
 import moment from "moment";
-import type { RouterOutputs } from "~/trpc/shared";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { api } from "~/trpc/react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { ParcelStatusUI } from "~/helpers/enumTranslations";
+import UpdateAction from "./updateAction";
 
-const SubmitSelected = ({ parcelIds }: { parcelIds: string[] }) => {
-  const { mutateAsync: pickUpSelected } = api.parcels.assignMany.useMutation();
-  const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
+import type { RouterOutputs } from "~/trpc/shared";
+import type { UpdateOrderProps } from "./page";
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      await pickUpSelected({ parcelIds });
-      toast.success("Parcels picked up");
-      router.refresh();
-    } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong");
-    }
-    setLoading(false);
-  };
-
-  return (
-    <Button disabled onClick={handleSubmit}>
-      {loading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
-      Update
-    </Button>
-  );
-};
-
-type Parcel = RouterOutputs["parcels"]["getAssignable"]["parcels"][number];
+type Parcel = RouterOutputs["parcels"]["getAssigned"]["parcels"][number];
 type ParcelTableParams = {
   data: Parcel[];
   page: number;
@@ -56,10 +28,14 @@ type ParcelTableParams = {
   totalCount: number;
 };
 
-const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
+const ParcelTable = ({
+  data,
+  page,
+  size,
+  totalCount,
+  searchParams,
+}: ParcelTableParams & UpdateOrderProps) => {
   const [selected, setSelected] = useState<Parcel["id"][]>([]);
-
-  console.log(selected);
 
   return (
     <>
@@ -67,8 +43,10 @@ const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">Select</TableHead>
-            <TableHead>Origin</TableHead>
+            <TableHead className="w-52">Tracking number</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Destination</TableHead>
+            <TableHead>Contact Info</TableHead>
             <TableHead className="w-52 text-right">Order Created</TableHead>
           </TableRow>
         </TableHeader>
@@ -95,13 +73,10 @@ const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
                 />
               </TableCell>
               <TableCell className="font-medium">
-                {`${parcel.origin.city}, ${parcel.origin.postalCode}, ${
-                  parcel.origin.street
-                }${
-                  parcel.origin.parcelMachine?.name
-                    ? `, ${parcel.origin.parcelMachine?.name}`
-                    : ""
-                }`}
+                {parcel.trackingNumber}
+              </TableCell>
+              <TableCell className="font-medium">
+                {ParcelStatusUI[parcel.status]}
               </TableCell>
               <TableCell className="font-medium">
                 {`${parcel.destination.city}, ${
@@ -109,6 +84,13 @@ const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
                 }, ${parcel.destination.street}${
                   parcel.destination.parcelMachine?.name
                     ? `, ${parcel.destination.parcelMachine?.name}`
+                    : ""
+                }`}
+              </TableCell>
+              <TableCell className="font-medium">
+                {`${parcel.receiverContact.phone}${
+                  parcel.receiverContact.fullName
+                    ? `, ${parcel.receiverContact.fullName}`
                     : ""
                 }`}
               </TableCell>
@@ -126,7 +108,7 @@ const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
                   currentPage={page}
                   size={size}
                   totalCount={totalCount}
-                  // searchParams={searchParams}
+                  searchParams={searchParams}
                 />
               </TableCell>
             </TableRow>
@@ -134,7 +116,7 @@ const ParcelTable = ({ data, page, size, totalCount }: ParcelTableParams) => {
         )}
         <TableCaption>Select parcels and asign them to yourself</TableCaption>
       </Table>
-      <SubmitSelected parcelIds={selected} />
+      <UpdateAction parcelIds={selected} />
     </>
   );
 };

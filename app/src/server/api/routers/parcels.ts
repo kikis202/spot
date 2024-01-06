@@ -172,13 +172,7 @@ export const parcelsRouter = createTRPCRouter({
         query: z
           .object({
             trackingNumber: z.string().optional(),
-            status: z
-              .nativeEnum(ParcelStatus)
-              .optional()
-              .default(ParcelStatus.PENDING),
-            size: z.nativeEnum(ParcelSize).optional(),
-            originId: z.string().optional(),
-            destinationId: z.string().optional(),
+            status: z.nativeEnum(ParcelStatus).optional(),
           })
           .optional()
           .default({
@@ -196,6 +190,8 @@ export const parcelsRouter = createTRPCRouter({
         orderBy: [{ destination: { postalCode: "asc" } }, { createdAt: "asc" }],
         select: {
           id: true,
+          trackingNumber: true,
+          status: true,
           createdAt: true,
           destination: {
             select: {
@@ -208,15 +204,10 @@ export const parcelsRouter = createTRPCRouter({
               postalCode: true,
             },
           },
-          origin: {
+          receiverContact: {
             select: {
-              parcelMachine: {
-                select: { name: true },
-              },
-
-              street: true,
-              city: true,
-              postalCode: true,
+              fullName: true,
+              phone: true,
             },
           },
         },
@@ -488,53 +479,141 @@ export const parcelsRouter = createTRPCRouter({
 
       return updatedParcels;
     }),
-  updateStatus: courierProcedure
+  updateStatuses: courierProcedure
     .input(
       z.object({
-        parcelId: z.string(),
+        parcelIds: z.array(z.string()),
         title: z.string(),
         status: z.nativeEnum(ParcelStatus),
-        lockerId: z.string().optional(),
       }),
     )
-    .query(async ({ input }) => {
-      const parcel = await db.parcel.findUnique({
-        where: { id: input.parcelId },
+    .mutation(async ({ input }) => {
+      const { parcelIds, title, status } = input;
+
+      const parcels = await db.parcel.findMany({
+        where: { id: { in: parcelIds } },
+        select: {
+          id: true,
+          size: true,
+          lockerId: true,
+          destination: { select: { parcelMachine: true } },
+        },
       });
 
-      if (!parcel) {
+      if (parcels.length !== parcelIds.length) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Parcel not found",
+          message: "Some parcels not found",
         });
       }
 
-      if (
-        parcel.status in
-        [ParcelStatus.DELIVERED, ParcelStatus.RETURNED, ParcelStatus.CANCELLED]
-      ) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Parcel is already ${parcel.status}`,
+      if (status === ParcelStatus.AWAITING_PICKUP) {
+        // try to find locker for each parcel
+        const parcelMachineIds = parcels
+          .map((parcel) => parcel.destination.parcelMachine?.id)
+          .filter((id) => id !== undefined) as string[];
+
+        if (parcelMachineIds.length !== parcelIds.length) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Some parcels do not have parcel machines",
+          });
+        }
+
+        const parcelMachines = await db.parcelMachine.findMany({
+          where: { id: { in: parcelMachineIds } },
+          select: {
+            id: true,
+            lockers: {
+              select: { id: true, size: true },
+              where: { available: true },
+            },
+          },
         });
+
+        for (const parcel of parcels) {
+          const parcelMachine = parcelMachines.find(
+            (pm) => pm.id === parcel.destination.parcelMachine?.id,
+          );
+
+          if (!parcelMachine) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Parcel machine not found",
+            });
+          }
+
+          const locker = parcelMachine.lockers.find(
+            (l) => l.size === parcel.size,
+          );
+
+          if (!locker) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "No available lockers",
+            });
+          }
+
+          parcelMachine.lockers = parcelMachine.lockers.filter(
+            (l) => l.id !== locker?.id,
+          );
+
+          await db.parcel.update({
+            where: { id: parcel.id },
+            data: {
+              lockerId: locker.id,
+              status,
+              courierId: null,
+            },
+          });
+
+          await db.parcelUpdate.create({
+            data: {
+              parcelId: parcel.id,
+              status,
+              title,
+            },
+          });
+
+          await db.locker.update({
+            where: { id: locker.id },
+            data: {
+              available: false,
+            },
+          });
+        }
+      } else {
+        await db.parcel.updateMany({
+          where: { id: { in: parcelIds } },
+          data: {
+            status,
+            ...(status === ParcelStatus.DELIVERED && {
+              courierId: null,
+              lockerId: null,
+            }),
+          },
+        });
+
+        await db.parcelUpdate.createMany({
+          data: parcelIds.map((parcelId) => ({
+            parcelId,
+            status,
+            title,
+          })),
+        });
+
+        const lockerIds = parcels
+          .map((parcel) => parcel.lockerId)
+          .filter((id) => id !== null) as string[];
+
+        if (lockerIds.length) {
+          await db.locker.updateMany({
+            where: { id: { in: lockerIds } },
+            data: {
+              available: true,
+            },
+          });
+        }
       }
-
-      await db.parcelUpdate.create({
-        data: {
-          parcelId: input.parcelId,
-          status: input.status,
-          title: input.title,
-        },
-      });
-
-      const updatedParcel = await db.parcel.update({
-        where: { id: input.parcelId },
-        data: {
-          status: input.status,
-          ...(input.lockerId && { lockerId: input.lockerId }),
-        },
-      });
-
-      return updatedParcel;
     }),
 });
