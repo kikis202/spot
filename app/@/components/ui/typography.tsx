@@ -94,7 +94,7 @@ export const Blockquote = ({
   children: React.ReactNode;
 }) => {
   return (
-    <blockquote className={cn(className, "mt-6 border-l-2 pl-6 italic")}>
+    <blockquote className={cn(className, "border-l-2 pl-6 italic")}>
       {children}
     </blockquote>
   );
