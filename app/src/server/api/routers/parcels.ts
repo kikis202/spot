@@ -114,6 +114,56 @@ export const parcelsRouter = createTRPCRouter({
 
       return { parcels, count };
     }),
+  getAssignable: courierProcedure
+    .input(
+      z.object({
+        size: z.number().optional().default(10),
+        page: z.number().optional().default(1),
+      }),
+    )
+    .query(async ({ input }) => {
+      const parcels = await db.parcel.findMany({
+        skip: input.size * (input.page - 1),
+        take: input.size,
+        where: { status: ParcelStatus.PENDING, courierId: null },
+        orderBy: [
+          { origin: { postalCode: "asc" } },
+          { destination: { postalCode: "asc" } },
+        ],
+        select: {
+          id: true,
+          createdAt: true,
+          destination: {
+            select: {
+              parcelMachine: {
+                select: { name: true },
+              },
+
+              street: true,
+              city: true,
+              postalCode: true,
+            },
+          },
+          origin: {
+            select: {
+              parcelMachine: {
+                select: { name: true },
+              },
+
+              street: true,
+              city: true,
+              postalCode: true,
+            },
+          },
+        },
+      });
+
+      const count = await db.parcel.count({
+        where: { status: ParcelStatus.PENDING, courierId: null },
+      });
+
+      return { parcels, count };
+    }),
   getAssigned: courierProcedure
     .input(
       z.object({
@@ -369,12 +419,12 @@ export const parcelsRouter = createTRPCRouter({
   assignMany: courierProcedure
     .input(
       z.object({
-        courierId: z.string(),
         parcelIds: z.array(z.string()),
       }),
     )
-    .query(async ({ input }) => {
-      const { courierId, parcelIds } = input;
+    .mutation(async ({ ctx, input }) => {
+      const { parcelIds } = input;
+      const courierId = ctx.session.user.id;
 
       const parcels = await db.parcel.findMany({
         where: { id: { in: parcelIds } },
@@ -390,6 +440,14 @@ export const parcelsRouter = createTRPCRouter({
       const updatedParcels = await db.parcel.updateMany({
         where: { id: { in: parcelIds } },
         data: { courierId },
+      });
+
+      await db.parcelUpdate.createMany({
+        data: parcelIds.map((parcelId) => ({
+          parcelId,
+          status: ParcelStatus.PENDING,
+          title: "Assigned to courier",
+        })),
       });
 
       return updatedParcels;
