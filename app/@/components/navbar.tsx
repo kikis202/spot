@@ -84,6 +84,10 @@ const navLinks: navLinks = {
       name: "Update parcel status",
       href: "/parcel/update",
     },
+    {
+      name: "Sign out",
+      href: "/api/auth/signout",
+    },
   ],
   BUISNESS: [],
   SUPPORT: [],
