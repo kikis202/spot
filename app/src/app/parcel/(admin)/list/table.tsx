@@ -1,3 +1,4 @@
+import Paginator from "@/components/pagination";
 import {
   Table,
   TableBody,
@@ -8,16 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Paginator from "../../../../@/components/pagination";
-import { Button } from "@/components/ui/button";
 import moment from "moment";
-import Link from "next/link";
 import { ParcelStatusUI } from "~/helpers/enumTranslations";
 
 import type { RouterOutputs } from "~/trpc/shared";
-import type { TrackParcelProps } from "../(user)/own/page";
+import EditParcel from "./edit";
+import type { AllParcelsProps } from "./page";
 
-type Parcel = RouterOutputs["parcels"]["getMy"]["parcels"][number];
+type Parcel = RouterOutputs["parcels"]["getAll"]["parcels"][number];
 
 type ParcelTableParams = {
   data: Parcel[];
@@ -32,7 +31,7 @@ const ParcelTable = ({
   size,
   totalCount,
   searchParams,
-}: TrackParcelProps & ParcelTableParams) => {
+}: AllParcelsProps & ParcelTableParams) => {
   return (
     <Table>
       <TableHeader>
@@ -68,11 +67,7 @@ const ParcelTable = ({
                 `${parcel.destination.street}, ${parcel.destination.city}`}
             </TableCell>
             <TableCell className="font-medium">
-              <Button variant="ghost">
-                <Link href={`/parcel/view/${parcel.trackingNumber}`}>
-                  See Details
-                </Link>
-              </Button>
+              <EditParcel parcel={parcel} />
             </TableCell>
           </TableRow>
         ))}

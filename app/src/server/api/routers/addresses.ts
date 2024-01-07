@@ -135,7 +135,7 @@ export const addressesRouter = createTRPCRouter({
     }),
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const address = await db.address.findUnique({
         include: {
           parcelDestinations: true,

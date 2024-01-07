@@ -33,7 +33,7 @@ import { z } from "zod";
 import { ParcelSizeUI, ParcelStatusUI } from "~/helpers/enumTranslations";
 
 import type { RouterOutputs } from "~/trpc/shared";
-import type { TrackParcelProps } from "../own/page";
+import type { TrackParcelProps } from "../(user)/own/page";
 
 const filterSchema = z.object({
   trackingNumber: z.string().optional(),

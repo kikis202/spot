@@ -91,7 +91,28 @@ const navLinks: navLinks = {
   ],
   BUISNESS: [],
   SUPPORT: [],
-  ADMIN: [],
+  ADMIN: [
+    {
+      name: "Home",
+      href: "/",
+    },
+    {
+      name: "Users",
+      href: "/users/list",
+    },
+    {
+      name: "Parcels",
+      href: "/parcel/list",
+    },
+    {
+      name: "Parcel machines",
+      href: "/parcelMachines/list",
+    },
+    {
+      name: "Sign out",
+      href: "/api/auth/signout",
+    }
+  ],
 };
 
 const ListItem = React.forwardRef<

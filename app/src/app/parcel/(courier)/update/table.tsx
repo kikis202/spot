@@ -43,7 +43,7 @@ const ParcelTable = ({
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">Select</TableHead>
-            <TableHead className="w-52">Tracking number</TableHead>
+            <TableHead className="w-56">Tracking number</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Destination</TableHead>
             <TableHead>Contact Info</TableHead>
@@ -103,7 +103,7 @@ const ParcelTable = ({
         {totalCount > size && (
           <TableFooter>
             <TableRow>
-              <TableCell className="!py-2" colSpan={4}>
+              <TableCell className="!py-2" colSpan={6}>
                 <Paginator
                   currentPage={page}
                   size={size}

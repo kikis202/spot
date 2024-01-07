@@ -1,12 +1,8 @@
-import { z } from "zod";
-import {
-  adminProcedure,
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "../trpc";
-import { db } from "~/server/db";
+import { LockerSize } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { db } from "~/server/db";
+import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 
 export const parcelMachinesRouter = createTRPCRouter({
   getAll: publicProcedure.query(async () => {
@@ -27,135 +23,150 @@ export const parcelMachinesRouter = createTRPCRouter({
 
     return parcelMachines;
   }),
-  // get: publicProcedure
-  //   .input(z.object({ id: z.string() }))
-  //   .query(async ({ input }) => {
-  //     const address = await db.address.findUnique({
-  //       where: { id: input.id },
-  //     });
+  getAdminAll: adminProcedure
+    .input(
+      z.object({
+        page: z.number().default(1),
+        size: z.number().default(10),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { page, size } = input;
 
-  //     return address;
-  //   }),
-  // create: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       street: z.string(),
-  //       city: z.string(),
-  //       postalCode: z.string(),
-  //       country: z.string(),
-  //       userId: z.string(),
-  //     }),
-  //   )
-  //   .query(async ({ ctx, input }) => {
-  //     const userId = ctx.session.user.id;
+      const parcelMachines = await db.parcelMachine.findMany({
+        select: {
+          id: true,
+          name: true,
+          address: {
+            select: {
+              id: true,
+              street: true,
+              city: true,
+              postalCode: true,
+              country: true,
+            },
+          },
+          lockers: {
+            select: {
+              id: true,
+              size: true,
+            },
+          },
+        },
 
-  //     const address = await db.address.create({
-  //       data: {
-  //         ...input,
-  //         userId,
-  //       },
-  //     });
+        skip: (page - 1) * size,
+        take: size,
 
-  //     return address;
-  //   }),
-  // update: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       id: z.string(),
-  //       street: z.string(),
-  //       city: z.string(),
-  //       postalCode: z.string(),
-  //       country: z.string(),
-  //     }),
-  //   )
-  //   .query(async ({ ctx, input }) => {
-  //     const address = await db.address.findUnique({
-  //       include: {
-  //         parcelDestinations: true,
-  //         parcelOrigins: true,
-  //         parcelMachine: true,
-  //       },
-  //       where: { id: input.id },
-  //     });
+        orderBy: { name: "asc" },
+      });
 
-  //     if (!address) {
-  //       throw new TRPCError({
-  //         code: "INTERNAL_SERVER_ERROR",
-  //         message: "Address not found",
-  //       });
-  //     }
+      const count = await db.parcelMachine.count();
 
-  //     if (address.userId !== ctx.session.user.id) {
-  //       throw new TRPCError({
-  //         code: "INTERNAL_SERVER_ERROR",
-  //         message: "Unauthorized",
-  //       });
-  //     }
+      return { parcelMachines, count };
+    }),
+  create: adminProcedure
+    .input(
+      z.object({
+        name: z.string(),
+        address: z.object({
+          street: z.string(),
+          city: z.string(),
+          postalCode: z.string(),
+          country: z.string(),
+        }),
+        [LockerSize.SMALL]: z.number().min(0).max(100),
+        [LockerSize.MEDIUM]: z.number().min(0).max(100),
+        [LockerSize.LARGE]: z.number().min(0).max(100),
+        [LockerSize.XLARGE]: z.number().min(0).max(100),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { name, address, ...lockers } = input;
 
-  //     if (
-  //       address.parcelDestinations.length > 0 ||
-  //       address.parcelOrigins.length > 0 ||
-  //       address.parcelMachine
-  //     ) {
-  //       throw new TRPCError({
-  //         code: "INTERNAL_SERVER_ERROR",
-  //         message:
-  //           "Address cannot be updated because it is associated with parcels",
-  //       });
-  //     }
+      const createdAddress = await db.address.create({
+        data: {
+          street: address.street,
+          city: address.city,
+          postalCode: address.postalCode,
+          country: address.country,
+        },
+      });
 
-  //     const updatedAddress = await db.address.update({
-  //       where: { id: input.id },
-  //       data: {
-  //         street: input.street,
-  //         city: input.city,
-  //         postalCode: input.postalCode,
-  //         country: input.country,
-  //       },
-  //     });
+      const createdParcelMachine = await db.parcelMachine.create({
+        data: {
+          name,
+          addressId: createdAddress.id,
+        },
+      });
 
-  //     return updatedAddress;
-  //   }),
-  // remove: protectedProcedure
-  //   .input(z.object({ id: z.string() }))
-  //   .query(async ({ ctx, input }) => {
-  //     const address = await db.address.findUnique({
-  //       include: {
-  //         parcelDestinations: true,
-  //         parcelOrigins: true,
-  //         parcelMachine: true,
-  //       },
-  //       where: { id: input.id },
-  //     });
+      for (const [size, count] of Object.entries(lockers)) {
+        console.log(size, count);
+        await db.locker.createMany({
+          data: Array.from({ length: count }, () => ({
+            size: size as LockerSize,
+            parcelMachineId: createdParcelMachine.id,
+          })),
+        });
+      }
 
-  //     if (!address) {
-  //       throw new TRPCError({
-  //         code: "INTERNAL_SERVER_ERROR",
-  //         message: "Address not found",
-  //       });
-  //     }
+      return createdParcelMachine;
+    }),
+  update: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        street: z.string(),
+        city: z.string(),
+        postalCode: z.string(),
+        country: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const address = await db.address.findUnique({
+        include: {
+          parcelDestinations: true,
+          parcelOrigins: true,
+          parcelMachine: true,
+        },
+        where: { id: input.id },
+      });
 
-  //     if (address.userId !== ctx.session.user.id) {
-  //       throw new TRPCError({
-  //         code: "INTERNAL_SERVER_ERROR",
-  //         message: "Unauthorized",
-  //       });
-  //     }
+      if (!address) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Address not found",
+        });
+      }
 
-  //     if (
-  //       address.parcelDestinations.length === 0 &&
-  //       address.parcelOrigins.length > 0 &&
-  //       !address.parcelMachine
-  //     ) {
-  //       // Delete address if it is not associated with any parcels
-  //       return await db.address.delete({
-  //         where: { id: input.id },
-  //       });
-  //     }
+      if (address.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unauthorized",
+        });
+      }
 
-  //     return await db.address.update({
-  //       where: { id: input.id },
-  //       data: { userId: null },
-  //     });
-  //   }),
+      if (
+        address.parcelDestinations.length > 0 ||
+        address.parcelOrigins.length > 0 ||
+        address.parcelMachine
+      ) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Address cannot be updated because it is associated with parcels",
+        });
+      }
+
+      const updatedAddress = await db.address.update({
+        where: { id: input.id },
+        data: {
+          street: input.street,
+          city: input.city,
+          postalCode: input.postalCode,
+          country: input.country,
+        },
+      });
+
+      return updatedAddress;
+    }),
 });
