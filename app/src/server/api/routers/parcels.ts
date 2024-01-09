@@ -2,7 +2,10 @@ import { ParcelSize, ParcelStatus } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { parcelCreateInputSchema } from "~/helpers/dbSchemas";
+import {
+  parcelCreateInputSchema,
+  personalInfoSchema,
+} from "~/helpers/dbSchemas";
 import { db } from "~/server/db";
 import {
   adminProcedure,
@@ -42,11 +45,6 @@ export const parcelsRouter = createTRPCRouter({
           .object({
             trackingNumber: z.string().optional(),
             status: z.nativeEnum(ParcelStatus).optional(),
-            size: z.nativeEnum(ParcelSize).optional(),
-            senderId: z.string().optional(),
-            courierId: z.string().optional(),
-            originId: z.string().optional(),
-            destinationId: z.string().optional(),
           })
           .optional()
           .default({}),
@@ -57,9 +55,99 @@ export const parcelsRouter = createTRPCRouter({
         skip: input.size * (input.page - 1),
         take: input.size,
         where: input.query,
+        select: {
+          id: true,
+          trackingNumber: true,
+          status: true,
+          createdAt: true,
+          origin: {
+            select: {
+              parcelMachine: {
+                select: { name: true },
+              },
+
+              id: true,
+              street: true,
+              city: true,
+              postalCode: true,
+              country: true,
+            },
+          },
+          destination: {
+            select: {
+              parcelMachine: {
+                select: { name: true },
+              },
+
+              id: true,
+              street: true,
+              city: true,
+              postalCode: true,
+              country: true,
+            },
+          },
+          receiverContact: true,
+          senderContact: true,
+          updates: {
+            select: { createdAt: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
       });
 
-      return parcels;
+      const count = await db.parcel.count({ where: input.query });
+
+      return { parcels, count };
+    }),
+  update: adminProcedure
+    .input(
+      z.object({
+        ...personalInfoSchema.shape,
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      let originId = input.sender.address.id;
+      let destinationId = input.receiver.address.id;
+      let senderContactId = input.sender.contact.id;
+      let receiverContactId = input.receiver.contact.id;
+
+      if (!originId) {
+        const originAddress = await db.address.create({
+          data: {
+            ...input.sender.address,
+          },
+        });
+        originId = originAddress.id;
+      }
+
+      if (!destinationId) {
+        const destinationAddress = await db.address.create({
+          data: {
+            ...input.receiver.address,
+          },
+        });
+        destinationId = destinationAddress.id;
+      }
+
+      if (!senderContactId) {
+        const senderContact = await db.contactInfo.create({
+          data: {
+            ...input.sender.contact,
+          },
+        });
+        senderContactId = senderContact.id;
+      }
+
+      if (!receiverContactId) {
+        const receiverContact = await db.contactInfo.create({
+          data: {
+            ...input.receiver.contact,
+          },
+        });
+        receiverContactId = receiverContact.id;
+      }
     }),
   getMy: protectedProcedure
     .input(

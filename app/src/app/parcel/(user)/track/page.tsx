@@ -62,7 +62,7 @@ const TrackParcel = async ({ searchParams }: TrackParcelProps) => {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <H1>Track Parcels</H1>
+        <H1>Tracked Parcels</H1>
         <TableFilter searchParams={searchParams} addresses={addresses} />
         <ParcelTable
           page={page}

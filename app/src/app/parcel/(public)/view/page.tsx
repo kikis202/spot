@@ -7,7 +7,7 @@ import TrackingNumberInput from "./trackingNumberInput";
 const FindByTrackingNumber = () => {
   return (
     <Card className="h-fit w-full max-w-md">
-      <CardHeader className="flex items-center gap-2 flex-row">
+      <CardHeader className="flex flex-row items-center gap-2">
         <ParcelIcon className="h-6 w-6" />
         <CardTitle className="!mt-0">Where is my parcel?</CardTitle>
       </CardHeader>

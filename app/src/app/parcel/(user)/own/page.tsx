@@ -60,19 +60,19 @@ const TrackParcel = async ({ searchParams }: TrackParcelProps) => {
   const addresses = await api.addresses.getMy.query();
 
   return (
-      <MainLayout>
-        <div className="space-y-6">
-          <H1>Your Parcels</H1>
-          <TableFilter searchParams={searchParams} addresses={addresses} />
-          <ParcelTable
-            page={page}
-            size={size}
-            data={parcels}
-            totalCount={count}
-            searchParams={searchParams}
-          />
-        </div>
-      </MainLayout>
+    <MainLayout>
+      <div className="space-y-6">
+        <H1>Your Parcels</H1>
+        <TableFilter searchParams={searchParams} addresses={addresses} />
+        <ParcelTable
+          page={page}
+          size={size}
+          data={parcels}
+          totalCount={count}
+          searchParams={searchParams}
+        />
+      </div>
+    </MainLayout>
   );
 };
 
@@ -82,4 +82,4 @@ export default function TrackParcelPage(props: TrackParcelProps) {
       <TrackParcel {...props} />
     </UserPage>
   );
-};
+}

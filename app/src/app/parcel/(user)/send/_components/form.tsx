@@ -1,6 +1,11 @@
 "use client";
 
-import { CreditCardIcon, IdIcon, ParcelIcon, SummaryIcon } from "@/components/icons";
+import {
+  CreditCardIcon,
+  IdIcon,
+  ParcelIcon,
+  SummaryIcon,
+} from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { getSessionStorageValue } from "@/lib/clientUtils";
 import { useCallback, useEffect, useState } from "react";
@@ -17,8 +22,8 @@ const steps = [
     icon: <ParcelIcon />,
   },
   {
-    title: "Sender and recipient",
-    details: "Enter the sender and recipient details",
+    title: "Sender and receiver",
+    details: "Enter the sender and receiver details",
     icon: <IdIcon />,
   },
   {
