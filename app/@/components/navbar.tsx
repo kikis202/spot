@@ -14,6 +14,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { Button } from "@/components/ui/button";
 import { ThemeSelect } from "./theme-select";
 import { usePathname } from "next/navigation";
 
@@ -40,10 +41,6 @@ const navLinks: navLinks = {
       name: "Find parcel",
       href: "/parcel/view",
     },
-    {
-      name: "Sign in",
-      href: "/api/auth/signin",
-    },
   ],
   USER: [
     {
@@ -66,10 +63,6 @@ const navLinks: navLinks = {
       name: "Find parcel",
       href: "/parcel/view",
     },
-    {
-      name: "Sign out",
-      href: "/api/auth/signout",
-    },
   ],
   COURIER: [
     {
@@ -83,10 +76,6 @@ const navLinks: navLinks = {
     {
       name: "Update parcel status",
       href: "/parcel/update",
-    },
-    {
-      name: "Sign out",
-      href: "/api/auth/signout",
     },
   ],
   BUISNESS: [],
@@ -108,10 +97,6 @@ const navLinks: navLinks = {
       name: "Parcel machines",
       href: "/parcelMachines/list",
     },
-    {
-      name: "Sign out",
-      href: "/api/auth/signout",
-    }
   ],
 };
 
@@ -178,6 +163,11 @@ const NavLinks = ({ navLinks }: { navLinks: NavItem[] }) => {
 };
 
 export const Navbar = ({ role }: { role: Role | "default" }) => {
+  const authAction =
+    role === "default"
+      ? { href: "/api/auth/signin", label: "Sign in" }
+      : { href: "/api/auth/signout", label: "Sign out" };
+
   return (
     <div className="flex h-16 items-center justify-between">
       <NavigationMenu>
@@ -186,7 +176,12 @@ export const Navbar = ({ role }: { role: Role | "default" }) => {
         </NavigationMenuList>
       </NavigationMenu>
 
-      <ThemeSelect />
+      <div className="flex items-center gap-2">
+        <Button asChild variant="outline">
+          <Link href={authAction.href}>{authAction.label}</Link>
+        </Button>
+        <ThemeSelect />
+      </div>
     </div>
   );
 };
