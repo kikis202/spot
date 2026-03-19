@@ -127,9 +127,10 @@ const TrackingPage = async ({
     trackingNumber: string;
   };
 }) => {
+  const caller = await api();
   const session = await getServerAuthSession();
-  const { parcel, isTracked, isSender } = await api.parcels.getOne
-    .query({ trackingNumber })
+  const { parcel, isTracked, isSender } = await caller.parcels
+    .getOne({ trackingNumber })
     .catch(() => {
       notFound();
     });

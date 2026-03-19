@@ -30,11 +30,12 @@ const parseSearchParams = (searchParams: UpdateOrderProps["searchParams"]) => {
 
 const PickupOrder = async ({ searchParams }: UpdateOrderProps) => {
   searchParams = parseSearchParams(searchParams);
+  const caller = await api();
 
   const page = parseInt(searchParams.page ?? "1", 10) || 1;
   const size = 10;
 
-  const { parcels, count } = await api.parcels.getAssigned.query({
+  const { parcels, count } = await caller.parcels.getAssigned({
     page,
     size,
     query: {

@@ -11,10 +11,11 @@ type PickupOrderProps = {
 };
 
 const PickupOrder = async ({ searchParams }: PickupOrderProps) => {
+  const caller = await api();
   const page = parseInt(searchParams.page ?? "1", 10) || 1;
   const size = 10;
 
-  const { parcels, count } = await api.parcels.getAssignable.query({
+  const { parcels, count } = await caller.parcels.getAssignable({
     page,
     size,
   });

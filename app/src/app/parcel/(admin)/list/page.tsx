@@ -31,11 +31,12 @@ const parseSearchParams = (searchParams: AllParcelsProps["searchParams"]) => {
 
 const AllParcels = async ({ searchParams }: AllParcelsProps) => {
   searchParams = parseSearchParams(searchParams);
+  const caller = await api();
 
   const page = parseInt(searchParams.page ?? "1", 10) || 1;
   const size = 10;
 
-  const { parcels, count } = await api.parcels.getAll.query({
+  const { parcels, count } = await caller.parcels.getAll({
     page,
     size,
     query: {

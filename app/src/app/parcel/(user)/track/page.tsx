@@ -42,6 +42,7 @@ const parseSearchParams = (searchParams: TrackParcelProps["searchParams"]) => {
 
 const TrackParcel = async ({ searchParams }: TrackParcelProps) => {
   searchParams = parseSearchParams(searchParams);
+  const caller = await api();
 
   const page = parseInt(searchParams.page ?? "1", 10) || 1;
   const size = 10;
@@ -56,14 +57,20 @@ const TrackParcel = async ({ searchParams }: TrackParcelProps) => {
       destinationId: searchParams.destinationId,
     },
   };
-  const { parcels, count } = await api.parcels.getTracked.query(query);
-  const addresses = await api.addresses.getMy.query();
+  const [{ parcels, count }, { origins, destinations }] = await Promise.all([
+    caller.parcels.getTracked(query),
+    caller.parcels.getTrackedFilterLocations({ query: query.query }),
+  ]);
 
   return (
     <MainLayout>
       <div className="space-y-6">
         <H1>Tracked Parcels</H1>
-        <TableFilter searchParams={searchParams} addresses={addresses} />
+        <TableFilter
+          searchParams={searchParams}
+          originLocations={origins}
+          destinationLocations={destinations}
+        />
         <ParcelTable
           page={page}
           size={size}

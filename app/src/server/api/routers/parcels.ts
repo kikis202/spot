@@ -1,4 +1,4 @@
-import { ParcelSize, ParcelStatus } from "@prisma/client";
+import { ParcelSize, ParcelStatus, Prisma } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -14,6 +14,125 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "../trpc";
+
+const parcelListQuerySchema = z.object({
+  trackingNumber: z.string().optional(),
+  status: z.nativeEnum(ParcelStatus).optional(),
+  size: z.nativeEnum(ParcelSize).optional(),
+  originId: z.string().optional(),
+  destinationId: z.string().optional(),
+});
+
+const parcelListInputSchema = z.object({
+  size: z.number().optional().default(10),
+  page: z.number().optional().default(1),
+  query: parcelListQuerySchema.optional().default({}),
+});
+
+const parcelLocationFilterInputSchema = z.object({
+  query: parcelListQuerySchema.optional().default({}),
+});
+
+const locationSelect = Prisma.validator<Prisma.AddressSelect>()({
+  id: true,
+  addressName: true,
+  street: true,
+  city: true,
+  parcelMachine: {
+    select: { name: true },
+  },
+});
+
+type ParcelLocation = Prisma.AddressGetPayload<{
+  select: typeof locationSelect;
+}>;
+
+type FilterLocationOption = {
+  id: string;
+  ids: string[];
+  label: string;
+};
+
+const formatLocationLabel = (location: ParcelLocation) => {
+  const title = location.parcelMachine?.name ?? location.addressName;
+  const address = `${location.street}, ${location.city}`;
+
+  return title ? `${title}: ${address}` : address;
+};
+
+const getLocationOptions = (locations: ParcelLocation[]): FilterLocationOption[] => {
+  const uniqueLocations = new Map<string, FilterLocationOption>();
+
+  locations.forEach((location) => {
+    const label = formatLocationLabel(location);
+    const existingLocation = uniqueLocations.get(label);
+
+    if (existingLocation) {
+      existingLocation.ids.push(location.id);
+      return;
+    }
+
+    uniqueLocations.set(label, {
+      id: location.id,
+      ids: [location.id],
+      label,
+    });
+  });
+
+  return [...uniqueLocations.values()].sort((left, right) =>
+    left.label.localeCompare(right.label),
+  );
+};
+
+const getMatchingLocationIds = async (locationId: string) => {
+  const location = await db.address.findUnique({
+    where: { id: locationId },
+    select: locationSelect,
+  });
+
+  if (!location) return [locationId];
+
+  const candidateLocations = await db.address.findMany({
+    where: {
+      street: location.street,
+      city: location.city,
+    },
+    select: locationSelect,
+  });
+
+  const targetLabel = formatLocationLabel(location);
+
+  return candidateLocations
+    .filter((candidateLocation) => formatLocationLabel(candidateLocation) === targetLabel)
+    .map((candidateLocation) => candidateLocation.id);
+};
+
+const buildParcelLocationWhere = async (
+  query: z.infer<typeof parcelListQuerySchema>,
+): Promise<Prisma.ParcelWhereInput> => {
+  const [originIds, destinationIds] = await Promise.all([
+    query.originId ? getMatchingLocationIds(query.originId) : undefined,
+    query.destinationId ? getMatchingLocationIds(query.destinationId) : undefined,
+  ]);
+
+  return {
+    ...(query.trackingNumber && { trackingNumber: query.trackingNumber }),
+    ...(query.status && { status: query.status }),
+    ...(query.size && { size: query.size }),
+    ...(originIds && { originId: { in: originIds } }),
+    ...(destinationIds && { destinationId: { in: destinationIds } }),
+  };
+};
+
+const omitLocationFilter = (
+  query: z.infer<typeof parcelListQuerySchema>,
+  key: "originId" | "destinationId",
+) => {
+  return {
+    ...query,
+    [key]: undefined,
+  };
+};
 
 const generateTrackingNumber = () => {
   const prefix = "SPOT";
@@ -150,29 +269,15 @@ export const parcelsRouter = createTRPCRouter({
       }
     }),
   getMy: protectedProcedure
-    .input(
-      z.object({
-        size: z.number().optional().default(10),
-        page: z.number().optional().default(1),
-        query: z
-          .object({
-            trackingNumber: z.string().optional(),
-            status: z.nativeEnum(ParcelStatus).optional(),
-            size: z.nativeEnum(ParcelSize).optional(),
-            originId: z.string().optional(),
-            destinationId: z.string().optional(),
-          })
-          .optional()
-          .default({}),
-      }),
-    )
+    .input(parcelListInputSchema)
     .query(async ({ ctx, input }) => {
       const senderId = ctx.session.user.id;
+      const where = await buildParcelLocationWhere(input.query);
 
       const parcels = await db.parcel.findMany({
         skip: input.size * (input.page - 1),
         take: input.size,
-        where: { senderId, ...input.query },
+        where: { senderId, ...where },
         orderBy: { updatedAt: "desc" },
         select: {
           trackingNumber: true,
@@ -197,10 +302,47 @@ export const parcelsRouter = createTRPCRouter({
       });
 
       const count = await db.parcel.count({
-        where: { senderId, ...input.query },
+        where: { senderId, ...where },
       });
 
       return { parcels, count };
+    }),
+  getMyFilterLocations: protectedProcedure
+    .input(parcelLocationFilterInputSchema)
+    .query(async ({ ctx, input }) => {
+      const senderId = ctx.session.user.id;
+      const originQuery = omitLocationFilter(input.query, "originId");
+      const destinationQuery = omitLocationFilter(input.query, "destinationId");
+      const [originWhere, destinationWhere] = await Promise.all([
+        buildParcelLocationWhere(originQuery),
+        buildParcelLocationWhere(destinationQuery),
+      ]);
+
+      const [originParcels, destinationParcels] = await Promise.all([
+        db.parcel.findMany({
+          where: { senderId, ...originWhere },
+          select: {
+            origin: {
+              select: locationSelect,
+            },
+          },
+        }),
+        db.parcel.findMany({
+          where: { senderId, ...destinationWhere },
+          select: {
+            destination: {
+              select: locationSelect,
+            },
+          },
+        }),
+      ]);
+
+      return {
+        origins: getLocationOptions(originParcels.map(({ origin }) => origin)),
+        destinations: getLocationOptions(
+          destinationParcels.map(({ destination }) => destination),
+        ),
+      };
     }),
   getAssignable: courierProcedure
     .input(
@@ -309,24 +451,10 @@ export const parcelsRouter = createTRPCRouter({
     }),
   // parcels from TrackedParcels model
   getTracked: protectedProcedure
-    .input(
-      z.object({
-        size: z.number().optional().default(10),
-        page: z.number().optional().default(1),
-        query: z
-          .object({
-            trackingNumber: z.string().optional(),
-            status: z.nativeEnum(ParcelStatus).optional(),
-            size: z.nativeEnum(ParcelSize).optional(),
-            originId: z.string().optional(),
-            destinationId: z.string().optional(),
-          })
-          .optional()
-          .default({}),
-      }),
-    )
+    .input(parcelListInputSchema)
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      const where = await buildParcelLocationWhere(input.query);
 
       const parcels = (
         await db.trackedParcels.findMany({
@@ -356,15 +484,60 @@ export const parcelsRouter = createTRPCRouter({
           },
           skip: input.size * (input.page - 1),
           take: input.size,
-          where: { userId, parcel: { ...input.query } },
+          where: { userId, parcel: where },
         })
       ).map(({ parcel }) => parcel);
 
       const count = await db.trackedParcels.count({
-        where: { userId, parcel: { ...input.query } },
+        where: { userId, parcel: where },
       });
 
       return { parcels, count };
+    }),
+  getTrackedFilterLocations: protectedProcedure
+    .input(parcelLocationFilterInputSchema)
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const originQuery = omitLocationFilter(input.query, "originId");
+      const destinationQuery = omitLocationFilter(input.query, "destinationId");
+      const [originWhere, destinationWhere] = await Promise.all([
+        buildParcelLocationWhere(originQuery),
+        buildParcelLocationWhere(destinationQuery),
+      ]);
+
+      const [originParcels, destinationParcels] = await Promise.all([
+        db.trackedParcels.findMany({
+          where: { userId, parcel: originWhere },
+          select: {
+            parcel: {
+              select: {
+                origin: {
+                  select: locationSelect,
+                },
+              },
+            },
+          },
+        }),
+        db.trackedParcels.findMany({
+          where: { userId, parcel: destinationWhere },
+          select: {
+            parcel: {
+              select: {
+                destination: {
+                  select: locationSelect,
+                },
+              },
+            },
+          },
+        }),
+      ]);
+
+      return {
+        origins: getLocationOptions(originParcels.map(({ parcel }) => parcel.origin)),
+        destinations: getLocationOptions(
+          destinationParcels.map(({ parcel }) => parcel.destination),
+        ),
+      };
     }),
   getOne: publicProcedure
     .input(z.object({ trackingNumber: z.string() }))

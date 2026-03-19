@@ -34,6 +34,7 @@ const parseSearchParams = (searchParams: UsersListProps["searchParams"]) => {
 
 const UsersList = async ({ searchParams }: UsersListProps) => {
   searchParams = parseSearchParams(searchParams);
+  const caller = await api();
 
   const page = parseInt(searchParams.page ?? "1", 10) || 1;
   const size = 10;
@@ -45,7 +46,7 @@ const UsersList = async ({ searchParams }: UsersListProps) => {
       role: searchParams.role as Role,
     },
   };
-  const { users, count } = await api.users.getAll.query(query);
+  const { users, count } = await caller.users.getAll(query);
 
   return (
     <MainLayout>

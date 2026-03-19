@@ -12,10 +12,11 @@ export type ParcelMachineProps = {
 };
 
 const ParcelMachineList = async ({ searchParams }: ParcelMachineProps) => {
+  const caller = await api();
   const page = parseInt(searchParams.page ?? "1", 10) || 1;
   const size = 10;
 
-  const { parcelMachines, count } = await api.parcelMachines.getAdminAll.query({
+  const { parcelMachines, count } = await caller.parcelMachines.getAdminAll({
     page,
     size,
   });

@@ -44,10 +44,12 @@ const filterSchema = z.object({
 });
 
 type FilterInput = z.infer<typeof filterSchema>;
-type Address = RouterOutputs["addresses"]["getMy"][number];
+type LocationOption =
+  RouterOutputs["parcels"]["getMyFilterLocations"]["origins"][number];
 
 type TableFilterProps = {
-  addresses: Address[];
+  originLocations: LocationOption[];
+  destinationLocations: LocationOption[];
 };
 
 const defaultValues: FilterInput = {
@@ -60,7 +62,8 @@ const defaultValues: FilterInput = {
 
 const TableFilter = ({
   searchParams,
-  addresses,
+  originLocations,
+  destinationLocations,
 }: TrackParcelProps & TableFilterProps) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -115,11 +118,15 @@ const TableFilter = ({
     label: ParcelSizeUI[value as ParcelSize],
     value: value as ParcelSize,
   }));
-  const addressOptions = addresses.map((address) => ({
-    label: `${address.addressName ? `${address.addressName}: ` : ""}${
-      address.street
-    } ${address.city}`,
-    value: address.id,
+  const originOptions = originLocations.map((location) => ({
+    ids: location.ids,
+    label: location.label,
+    value: location.id,
+  }));
+  const destinationOptions = destinationLocations.map((location) => ({
+    ids: location.ids,
+    label: location.label,
+    value: location.id,
   }));
 
   return (
@@ -295,10 +302,12 @@ const TableFilter = ({
                       )}
                     >
                       {field.value
-                        ? addressOptions.find(
-                            (option) => option.value === field.value,
+                        ? originOptions.find(
+                            (option) =>
+                              field.value !== undefined &&
+                              option.ids.includes(field.value),
                           )?.label
-                        : "Select address"}
+                        : "Select origin"}
                       <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -306,12 +315,12 @@ const TableFilter = ({
                 <PopoverContent align="start" className="p-0">
                   <Command>
                     <CommandInput
-                      placeholder="Search for address..."
+                      placeholder="Search for origin..."
                       className="h-9"
                     />
-                    <CommandEmpty>No matching address found.</CommandEmpty>
+                    <CommandEmpty>No matching origin found.</CommandEmpty>
                     <CommandGroup className="max-h-52 overflow-y-scroll">
-                      {addressOptions.map((option) => (
+                      {originOptions.map((option) => (
                         <CommandItem
                           value={option.label}
                           key={option.value}
@@ -360,10 +369,12 @@ const TableFilter = ({
                       )}
                     >
                       {field.value
-                        ? addressOptions.find(
-                            (option) => option.value === field.value,
+                        ? destinationOptions.find(
+                            (option) =>
+                              field.value !== undefined &&
+                              option.ids.includes(field.value),
                           )?.label
-                        : "Select address"}
+                        : "Select destination"}
                       <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -371,12 +382,12 @@ const TableFilter = ({
                 <PopoverContent align="start" className="p-0">
                   <Command>
                     <CommandInput
-                      placeholder="Search for address..."
+                      placeholder="Search for destination..."
                       className="h-9"
                     />
-                    <CommandEmpty>No matching address found.</CommandEmpty>
+                    <CommandEmpty>No matching destination found.</CommandEmpty>
                     <CommandGroup className="max-h-52 overflow-y-scroll">
-                      {addressOptions.map((option) => (
+                      {destinationOptions.map((option) => (
                         <CommandItem
                           value={option.label}
                           key={option.value}
