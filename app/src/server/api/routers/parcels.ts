@@ -29,8 +29,14 @@ const parcelListInputSchema = z.object({
   query: parcelListQuerySchema.optional().default({}),
 });
 
+const parcelLocationQuerySchema = z.object({
+  trackingNumber: z.string().optional(),
+  status: z.nativeEnum(ParcelStatus).optional(),
+  size: z.nativeEnum(ParcelSize).optional(),
+});
+
 const parcelLocationFilterInputSchema = z.object({
-  query: parcelListQuerySchema.optional().default({}),
+  query: parcelLocationQuerySchema.optional().default({}),
 });
 
 const locationSelect = Prisma.validator<Prisma.AddressSelect>()({
@@ -121,16 +127,6 @@ const buildParcelLocationWhere = async (
     ...(query.size && { size: query.size }),
     ...(originIds && { originId: { in: originIds } }),
     ...(destinationIds && { destinationId: { in: destinationIds } }),
-  };
-};
-
-const omitLocationFilter = (
-  query: z.infer<typeof parcelListQuerySchema>,
-  key: "originId" | "destinationId",
-) => {
-  return {
-    ...query,
-    [key]: undefined,
   };
 };
 
@@ -311,16 +307,11 @@ export const parcelsRouter = createTRPCRouter({
     .input(parcelLocationFilterInputSchema)
     .query(async ({ ctx, input }) => {
       const senderId = ctx.session.user.id;
-      const originQuery = omitLocationFilter(input.query, "originId");
-      const destinationQuery = omitLocationFilter(input.query, "destinationId");
-      const [originWhere, destinationWhere] = await Promise.all([
-        buildParcelLocationWhere(originQuery),
-        buildParcelLocationWhere(destinationQuery),
-      ]);
+      const where = await buildParcelLocationWhere(input.query);
 
       const [originParcels, destinationParcels] = await Promise.all([
         db.parcel.findMany({
-          where: { senderId, ...originWhere },
+          where: { senderId, ...where },
           select: {
             origin: {
               select: locationSelect,
@@ -328,7 +319,7 @@ export const parcelsRouter = createTRPCRouter({
           },
         }),
         db.parcel.findMany({
-          where: { senderId, ...destinationWhere },
+          where: { senderId, ...where },
           select: {
             destination: {
               select: locationSelect,
@@ -498,16 +489,11 @@ export const parcelsRouter = createTRPCRouter({
     .input(parcelLocationFilterInputSchema)
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const originQuery = omitLocationFilter(input.query, "originId");
-      const destinationQuery = omitLocationFilter(input.query, "destinationId");
-      const [originWhere, destinationWhere] = await Promise.all([
-        buildParcelLocationWhere(originQuery),
-        buildParcelLocationWhere(destinationQuery),
-      ]);
+      const where = await buildParcelLocationWhere(input.query);
 
       const [originParcels, destinationParcels] = await Promise.all([
         db.trackedParcels.findMany({
-          where: { userId, parcel: originWhere },
+          where: { userId, parcel: where },
           select: {
             parcel: {
               select: {
@@ -519,7 +505,7 @@ export const parcelsRouter = createTRPCRouter({
           },
         }),
         db.trackedParcels.findMany({
-          where: { userId, parcel: destinationWhere },
+          where: { userId, parcel: where },
           select: {
             parcel: {
               select: {

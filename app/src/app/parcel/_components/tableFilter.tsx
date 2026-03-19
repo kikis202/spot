@@ -52,6 +52,16 @@ type TableFilterProps = {
   destinationLocations: LocationOption[];
 };
 
+const SelectButtonLabel = ({
+  label,
+  placeholder,
+}: {
+  label?: string;
+  placeholder: string;
+}) => {
+  return <span className="truncate text-left">{label ?? placeholder}</span>;
+};
+
 const defaultValues: FilterInput = {
   trackingNumber: undefined,
   status: undefined,
@@ -167,15 +177,16 @@ const TableFilter = ({
                       variant="outline"
                       role="combobox"
                       className={cn(
-                        "w-52 justify-between",
+                        "w-52 justify-between gap-2 overflow-hidden",
                         !field.value && "text-muted-foreground",
                       )}
                     >
-                      {field.value
-                        ? statusOptions.find(
-                            (option) => option.value === field.value,
-                          )?.label
-                        : "Select status"}
+                      <SelectButtonLabel
+                        label={statusOptions.find(
+                          (option) => option.value === field.value,
+                        )?.label}
+                        placeholder="Select status"
+                      />
                       <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -232,15 +243,16 @@ const TableFilter = ({
                       variant="outline"
                       role="combobox"
                       className={cn(
-                        "w-44 justify-between",
+                        "w-44 justify-between gap-2 overflow-hidden",
                         !field.value && "text-muted-foreground",
                       )}
                     >
-                      {field.value
-                        ? sizeOptions.find(
-                            (option) => option.value === field.value,
-                          )?.label
-                        : "Select size"}
+                      <SelectButtonLabel
+                        label={sizeOptions.find(
+                          (option) => option.value === field.value,
+                        )?.label}
+                        placeholder="Select size"
+                      />
                       <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -297,17 +309,18 @@ const TableFilter = ({
                       variant="outline"
                       role="combobox"
                       className={cn(
-                        "w-52 justify-between",
+                        "w-52 justify-between gap-2 overflow-hidden",
                         !field.value && "text-muted-foreground",
                       )}
                     >
-                      {field.value
-                        ? originOptions.find(
-                            (option) =>
-                              field.value !== undefined &&
-                              option.ids.includes(field.value),
-                          )?.label
-                        : "Select origin"}
+                      <SelectButtonLabel
+                        label={originOptions.find(
+                          (option) =>
+                            field.value !== undefined &&
+                            option.ids.includes(field.value),
+                        )?.label}
+                        placeholder="Select origin"
+                      />
                       <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -364,17 +377,18 @@ const TableFilter = ({
                       variant="outline"
                       role="combobox"
                       className={cn(
-                        "w-52 justify-between",
+                        "w-52 justify-between gap-2 overflow-hidden",
                         !field.value && "text-muted-foreground",
                       )}
                     >
-                      {field.value
-                        ? destinationOptions.find(
-                            (option) =>
-                              field.value !== undefined &&
-                              option.ids.includes(field.value),
-                          )?.label
-                        : "Select destination"}
+                      <SelectButtonLabel
+                        label={destinationOptions.find(
+                          (option) =>
+                            field.value !== undefined &&
+                            option.ids.includes(field.value),
+                        )?.label}
+                        placeholder="Select destination"
+                      />
                       <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>

@@ -57,9 +57,14 @@ const TrackParcel = async ({ searchParams }: TrackParcelProps) => {
       destinationId: searchParams.destinationId,
     },
   };
+  const locationQuery = {
+    trackingNumber: searchParams.trackingNumber,
+    status: searchParams.status as ParcelStatus,
+    size: searchParams.size as ParcelSize,
+  };
   const [{ parcels, count }, { origins, destinations }] = await Promise.all([
     caller.parcels.getMy(query),
-    caller.parcels.getMyFilterLocations({ query: query.query }),
+    caller.parcels.getMyFilterLocations({ query: locationQuery }),
   ]);
 
   return (
