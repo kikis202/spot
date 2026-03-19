@@ -109,7 +109,7 @@ function Component({ loggedIn }: { loggedIn: boolean }) {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
               Ready to Send Your Parcel?
             </h2>
-            <Link href={loggedIn ? "/parcel/send" : "/api/auth/signin"}>
+            <Link href={loggedIn ? "/parcel/send" : "/auth/signin"}>
               <Button className="mt-4">Send Parcel</Button>
             </Link>
           </div>

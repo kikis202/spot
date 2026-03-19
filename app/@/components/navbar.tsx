@@ -165,8 +165,8 @@ const NavLinks = ({ navLinks }: { navLinks: NavItem[] }) => {
 export const Navbar = ({ role }: { role: Role | "default" }) => {
   const authAction =
     role === "default"
-      ? { href: "/api/auth/signin", label: "Sign in" }
-      : { href: "/api/auth/signout", label: "Sign out" };
+      ? { href: "/auth/signin", label: "Sign in" }
+      : { href: "/auth/signout", label: "Sign out" };
 
   return (
     <div className="flex h-16 items-center justify-between">
